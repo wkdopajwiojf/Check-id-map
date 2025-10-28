@@ -32,5 +32,5 @@ elseif mapId == 10449761463 or mapId == 14835828495 or mapId == 17455699549 then
     loadstring(game:HttpGet('https://raw.githubusercontent.com/wkdopajwiojf/dww/refs/heads/main/i'))()
 else
     -- ถ้าไม่ตรงกับ ID ใดเลย ให้เตะผู้เล่น
-    game.Players.LocalPlayer:Kick("This map is not supported yet.")
+    loadstring(game:HttpGet('https://raw.githubusercontent.com/wkdopajwiojf/Check-id-map/refs/heads/main/Chat%20with%20me'))()
 end
