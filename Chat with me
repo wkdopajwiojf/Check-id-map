@@ -1,0 +1,202 @@
+--[[
+    Discord Relay Chat Client (ฝั่ง Client/Executor)
+    - ใช้ syn.request / http_request / Fluxus.request ได้
+    - ปรับ RELAY_URL กับ RELAY_KEY ให้ตรงเซิร์ฟเวอร์คุณ!
+    - GUI: ดำ, Drag ได้, ข้อความใหม่ Auto Scroll, Send ปุ่ม/Enter, Minimize ได้
+]]
+
+local HttpService = game:GetService("HttpService")
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+
+-- ปรับ URL/KEY ให้ตรงของคุณ!
+local RELAY_URL = "https://dxd-1.onrender.com"
+local RELAY_KEY = "222554"
+
+-- เลือกฟังก์ชัน request ตาม executor
+local REQUEST = (syn and syn.request) or http_request or request or fluxus and fluxus.request
+assert(REQUEST, "Executor นี้ไม่รองรับ request (เช่น syn.request)")
+
+-- GUI สไตล์เรียบ-ดำ-Drag ได้
+local screen = Instance.new("ScreenGui", game:GetService("CoreGui"))
+screen.Name = "DiscordBridgeUI"
+screen.ResetOnSpawn = false
+
+local frame = Instance.new("Frame", screen)
+frame.AnchorPoint = Vector2.new(1,1)
+frame.Position = UDim2.new(1,-16,1,-16)
+frame.Size = UDim2.new(0,340,0,220)
+frame.BackgroundTransparency = 0.2
+frame.BackgroundColor3 = Color3.fromRGB(20,20,20)
+frame.BorderSizePixel = 0
+frame.Active = true
+frame.Draggable = true
+
+local title = Instance.new("TextLabel", frame)
+title.Size = UDim2.new(1,0,0,32)
+title.BackgroundTransparency = 1
+title.Text = "Chat with ลุงอาร์ม"
+title.Font = Enum.Font.GothamBlack
+title.TextSize = 20
+title.TextColor3 = Color3.fromRGB(255,150,80)
+title.TextStrokeTransparency = 0.7
+title.TextXAlignment = Enum.TextXAlignment.Left
+title.Position = UDim2.new(0,12,0,0)
+
+local minBtn = Instance.new("TextButton", frame)
+minBtn.Size = UDim2.new(0,32,0,32)
+minBtn.Position = UDim2.new(1,-38,0,0)
+minBtn.Text = "_"
+minBtn.BackgroundTransparency = 0.7
+minBtn.Font = Enum.Font.GothamBold
+minBtn.TextColor3 = Color3.fromRGB(200,200,200)
+minBtn.TextSize = 22
+
+local messages = Instance.new("ScrollingFrame", frame)
+messages.Position = UDim2.new(0,10,0,40)
+messages.Size = UDim2.new(1, -20, 1, -90)
+messages.CanvasSize = UDim2.new(0,0,0,0)
+messages.BackgroundTransparency = 1
+messages.ScrollBarThickness = 6
+messages.Name = "Messages"
+
+local uiList = Instance.new("UIListLayout", messages)
+uiList.Padding = UDim.new(0,7)
+uiList.SortOrder = Enum.SortOrder.LayoutOrder
+
+local textBox = Instance.new("TextBox", frame)
+textBox.Position = UDim2.new(0,10,1,-42)
+textBox.Size = UDim2.new(1, -120, 0, 32)
+textBox.PlaceholderText = "Type massage"
+textBox.ClearTextOnFocus = false
+textBox.Font = Enum.Font.Gotham
+textBox.TextSize = 18
+textBox.Text = ""
+textBox.TextColor3 = Color3.new(1,1,1)
+textBox.BackgroundTransparency = 0.15
+textBox.BackgroundColor3 = Color3.fromRGB(35,35,35)
+
+local sendBtn = Instance.new("TextButton", frame)
+sendBtn.Position = UDim2.new(1, -98, 1, -42)
+sendBtn.Size = UDim2.new(0,88,0,32)
+sendBtn.Text = "Send"
+sendBtn.Font = Enum.Font.GothamBlack
+sendBtn.TextColor3 = Color3.fromRGB(230,230,230)
+sendBtn.BackgroundColor3 = Color3.fromRGB(60,60,60)
+sendBtn.BackgroundTransparency = 0.08
+sendBtn.TextSize = 19
+
+-- Minimize/Expand
+local minimized = false
+minBtn.MouseButton1Click:Connect(function()
+    minimized = not minimized
+    messages.Visible = not minimized
+    textBox.Visible = not minimized
+    sendBtn.Visible = not minimized
+    frame.Size = minimized and UDim2.new(0,340,0,40) or UDim2.new(0,340,0,220)
+end)
+
+-- เพิ่มข้อความ
+local function addMessage(author, text)
+    local lbl = Instance.new("TextLabel", messages)
+    lbl.Size = UDim2.new(1,0,0,22)
+    lbl.BackgroundTransparency = 1
+    lbl.TextXAlignment = Enum.TextXAlignment.Left
+    lbl.Text = ("[%s] %s"):format(author, text)
+    lbl.Font = Enum.Font.Gotham
+    lbl.TextSize = 18
+    lbl.TextColor3 = Color3.fromRGB(220,220,220)
+    lbl.TextWrapped = true
+    lbl.ClipsDescendants = true
+
+    -- Auto scroll ลงล่าง
+    task.wait()
+    messages.CanvasSize = UDim2.new(0,0,0,uiList.AbsoluteContentSize.Y+8)
+    messages.CanvasPosition = Vector2.new(0, math.max(0,uiList.AbsoluteContentSize.Y+8-messages.AbsoluteWindowSize.Y))
+end
+
+-- Polling รับข้อความใหม่จาก Relay ทุก 1 วิ
+local lastMessageId = 0
+task.spawn(function()
+    while true do
+        local ok, res = pcall(function()
+            return REQUEST({
+                Url = RELAY_URL .. "/messages",
+                Method = "GET",
+                Headers = { ["x-relay-key"] = RELAY_KEY },
+            })
+        end)
+
+        if ok and res and res.StatusCode == 200 and res.Body then
+            local decoded = nil
+            local good, err = pcall(function() decoded = HttpService:JSONDecode(res.Body) end)
+            if good and decoded and decoded.ok and decoded.messages then
+                for _, msg in ipairs(decoded.messages) do
+                    -- ป้องกัน duplicate (ถ้ามี messageId ใน JSON)
+                    if not msg.id or (msg.id > lastMessageId) then
+                        addMessage(msg.author or "???", msg.text or "")
+                        if msg.id then lastMessageId = msg.id end
+                    end
+                end
+            end
+        end
+        task.wait(1)
+    end
+end)
+
+-- ฟังก์ชันส่งข้อความไป Discord ผ่าน Relay
+local function sendToDiscord(text)
+    local body = HttpService:JSONEncode({
+        author = player.Name,
+        text = text
+    })
+    local ok, res = pcall(function()
+        return REQUEST({
+            Url = RELAY_URL .. "/to-discord",
+            Method = "POST",
+            Headers = {
+                ["Content-Type"] = "application/json",
+                ["x-relay-key"] = RELAY_KEY,
+            },
+            Body = body
+        })
+    end)
+    if not ok then
+        addMessage("System", "❌ ส่งข้อความไม่สำเร็จ (request error)")
+    elseif res.StatusCode ~= 200 then
+        addMessage("System", "❌ Relay error: " .. tostring(res.Body))
+    else
+        -- ส่งสำเร็จ: แสดงข้อความทันที (optional)
+        -- addMessage(player.Name, text)
+    end
+end
+
+sendBtn.MouseButton1Click:Connect(function()
+    local txt = textBox.Text
+    if txt and txt ~= "" then
+        sendToDiscord(txt)
+        textBox.Text = ""
+    end
+end)
+
+-- Enter เพื่อส่ง
+textBox.FocusLost:Connect(function(enter)
+    if enter and textBox.Text ~= "" then
+        sendToDiscord(textBox.Text)
+        textBox.Text = ""
+    end
+end)
+
+-- เครดิต
+local credit = Instance.new("TextLabel", frame)
+credit.Size = UDim2.new(1,0,0,16)
+credit.Position = UDim2.new(0,0,1,-16)
+credit.BackgroundTransparency = 1
+credit.Text = "Powered by ลุงอาร์ม"
+credit.Font = Enum.Font.Gotham
+credit.TextSize = 10
+credit.TextColor3 = Color3.fromRGB(120,180,255)
+credit.TextXAlignment = Enum.TextXAlignment.Right
+
+-- destroy GUI เมื่อ leave
+player.OnTeleport:Connect(function() screen:Destroy() end)
