@@ -26,6 +26,8 @@ if mapId == 138365924124161 then
     loadstring(game:HttpGet('https://raw.githubusercontent.com/wkdopajwiojf/Backrooms-Drift/refs/heads/main/Script'))()
 elseif mapId == 14419907512 then
     loadstring(game:HttpGet('https://raw.githubusercontent.com/wkdopajwiojf/Zombie-game/refs/heads/main/Eng'))()
+elseif mapId == 9872472334 then
+    loadstring(game:HttpGet('https://raw.githubusercontent.com/wkdopajwiojf/evade-bypass-countdown/refs/heads/main/Protected_8932730771877973.lua.txt'))()
 elseif mapId == 10449761463 or mapId == 14835828495 or mapId == 17455699549 then
     loadstring(game:HttpGet('https://raw.githubusercontent.com/wkdopajwiojf/dww/refs/heads/main/i'))()
 else
