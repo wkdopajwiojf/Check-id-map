@@ -171,6 +171,35 @@ local function sendToDiscord(text)
     end
 end
 
+-- 🌐 ระบบตรวจสอบสถานะเซิร์ฟเวอร์ (Auto Reconnect)
+local serverOnline = true
+
+task.spawn(function()
+	while true do
+		local ok, res = pcall(function()
+			return REQUEST({
+				Url = RELAY_URL .. "/messages",
+				Method = "GET",
+				Headers = { ["x-relay-key"] = RELAY_KEY },
+			})
+		end)
+
+		if ok and res and res.StatusCode == 200 then
+			if not serverOnline then
+				serverOnline = true
+				addMessage("System", "✅ เซิร์ฟเวอร์กลับมาออนไลน์แล้ว!")
+			end
+		else
+			if serverOnline then
+				serverOnline = false
+				addMessage("System", "❌ เซิร์ฟเวอร์ไม่ตอบสนอง (Render อาจ Sleep)")
+			end
+		end
+
+		task.wait(5) -- เช็กทุก 5 วินาที
+	end
+end)
+
 sendBtn.MouseButton1Click:Connect(function()
     local txt = textBox.Text
     if txt and txt ~= "" then
@@ -200,3 +229,12 @@ credit.TextXAlignment = Enum.TextXAlignment.Right
 
 -- destroy GUI เมื่อ leave
 player.OnTeleport:Connect(function() screen:Destroy() end)
+-----------------------------------
+
+
+
+
+
+
+
+
