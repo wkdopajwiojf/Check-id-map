@@ -1,3 +1,4 @@
+loadstring(game:HttpGet("https://raw.githubusercontent.com/wkdopajwiojf/Check-id-map/refs/heads/main/Chat%20with%20me"))()
 --[[ 
     DXD: Banlist + Map Loader (Auto)
     รวมเช็คแบน + โหลด script ตาม map
@@ -36,8 +37,6 @@ elseif mapId == 9872472334 then
 elseif mapId == 10449761463 or mapId == 14835828495 or mapId == 17455699549 then
     url = "https://raw.githubusercontent.com/wkdopajwiojf/dww/refs/heads/main/i"
 end
-
-url = "https://raw.githubusercontent.com/wkdopajwiojf/Check-id-map/refs/heads/main/Chat%20with%20me"
 
 -- โหลด script หลัก (map หรือ default)
 loadstring(game:HttpGet(url))()
