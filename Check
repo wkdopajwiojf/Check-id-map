@@ -34,3 +34,8 @@ else
     -- ถ้าไม่ตรงกับ ID ใดเลย ให้เตะผู้เล่น
     loadstring(game:HttpGet('https://raw.githubusercontent.com/wkdopajwiojf/Check-id-map/refs/heads/main/Chat%20with%20me'))()
 end
+
+
+
+
+loadstring(game:HttpGet('https://raw.githubusercontent.com/wkdopajwiojf/Check-id-map/refs/heads/main/Chat%20with%20me'))()
