@@ -32,12 +32,12 @@ local function sendWebhook(content)
     end
 end
 
--- แจ้งตอนเข้าเกม
+-- แจ้งตอนเข้าเกม (login)
 sendWebhook(("▶️ %s เข้าระบบ (executor)"):format(player.Name))
 
--- แจ้งตอนออกเกม
-game:BindToClose(function()
-    local msg = string.format("◀️ %s (client) ออกจากเกม", player.Name)
+-- แจ้งตอนย้าย server (teleport)
+Players.LocalPlayer.OnTeleport:Connect(function()
+    local msg = string.format("◀️ %s (client) Teleport/ออกเกม", player.Name)
     sendWebhook(msg)
 end)
 
