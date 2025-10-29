@@ -301,17 +301,36 @@ local function scrollToBottom()
 	)
 end
 
-local function addMessage(author, text, isSelf)
-	local line = Instance.new("TextLabel")
-	line.Parent = messages
-	line.BackgroundTransparency = 1
-	line.Font = Enum.Font.Gotham
-	line.TextSize = 18
-	line.TextWrapped = true
-	line.AutomaticSize = Enum.AutomaticSize.XY
-	line.Size = UDim2.new(1,0,0,0)
-	line.ClipsDescendants = true
-	line.TextTransparency = 0
+local function addMessage(author, text)
+    local lbl = Instance.new("TextLabel", messages)
+    lbl.Size = UDim2.new(1, 0, 0, 22)
+    lbl.BackgroundTransparency = 1
+    lbl.TextXAlignment = Enum.TextXAlignment.Left
+    lbl.Font = Enum.Font.Gotham
+    lbl.TextSize = 18
+    lbl.TextWrapped = true
+    lbl.ClipsDescendants = true
+
+    -- ✅ ตรวจชื่อ owner
+    local displayName = author
+    local color = Color3.fromRGB(220,220,220)
+
+    if author == "Lunarplyr" then
+        displayName = "Owner " .. author
+        color = Color3.fromRGB(255, 80, 80) -- แดงสด
+    elseif author == "[Discord] jeffyhey" or author == "jeffyhey" then
+        displayName = "Owner " .. author
+        color = Color3.fromRGB(255, 120, 120)
+    end
+
+    lbl.Text = ("[%s] %s"):format(displayName, text)
+    lbl.TextColor3 = color
+
+    -- 📜 Auto scroll
+    task.wait()
+    messages.CanvasSize = UDim2.new(0, 0, 0, uiList.AbsoluteContentSize.Y + 8)
+    messages.CanvasPosition = Vector2.new(0, math.max(0, uiList.AbsoluteContentSize.Y + 8 - messages.AbsoluteWindowSize.Y))
+end
 
 	local t = getTimeTag()
 	if isSelf then
@@ -451,3 +470,4 @@ player.OnTeleport:Connect(function()
 end)
 
 addMessage("System","DXD Relay ready ✅", false)
+addmassage
