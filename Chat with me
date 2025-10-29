@@ -1,13 +1,34 @@
---[[ DXD All-in-one v5 (Stable)
+--[[ 🌐 DXD All-in-one v5 (Stable Config Edition)
    - Webhook Login/Leave
    - Banlist + Auto Map Loader
-   - DXD Chat Relay UI (Minimize)
-   - ไม่มี echo ซ้ำ / มีระบบย่อได้ปกติ
+   - DXD Chat Relay UI (Minimize + No Echo)
+   - มี CONFIG ปรับได้ทั้งหมด
 ]]
 
----------------------------
+-------------------------------------------------
+-- 🧩 CONFIG ZONE (แก้ไขได้)
+-------------------------------------------------
+local CONFIG = {
+    WEBHOOK = "https://discord.com/api/webhooks/1412800788828258365/yk13Av7fcp8nLLZugFNWNJxY-Td2Bb3K11Jbazrc9JJVcXfmdsRR9i45Ii3s-uqawVo0",
+    RELAY_URL = "https://dxd-1.onrender.com",
+    RELAY_KEY = "222554",
+    TITLE = "Chat with ลุงอาร์ม",
+    FRAME_SIZE = Vector2.new(360, 260),      -- ขนาด UI ตอนขยาย
+    THEME = {
+        BACKGROUND = Color3.fromRGB(25,25,25),
+        ACCENT = Color3.fromRGB(255,150,80),
+        SELF_MSG = Color3.fromRGB(100,200,255),
+        OTHER_MSG = Color3.fromRGB(255,180,90),
+        SEND_BTN = Color3.fromRGB(60,60,60)
+    },
+    FONT_SIZE = 18,
+    CREDIT_TEXT = "Powered by ลุงอาร์ม (Lunarplyr)",
+    CREDIT_COLOR = Color3.fromRGB(120,180,255)
+}
+
+-------------------------------------------------
 -- 1. Client Webhook Executor
----------------------------
+-------------------------------------------------
 local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
 local player = Players.LocalPlayer
@@ -16,15 +37,11 @@ local TweenService = game:GetService("TweenService")
 local REQUEST = (syn and syn.request) or http_request or request or (fluxus and fluxus.request)
 assert(REQUEST, "Executor นี้ไม่รองรับ request")
 
-local DISCORD_WEBHOOK = "https://discord.com/api/webhooks/1412800788828258365/yk13Av7fcp8nLLZugFNWNJxY-Td2Bb3K11Jbazrc9JJVcXfmdsRR9i45Ii3s-uqawVo0"
-local RELAY_URL = "https://dxd-1.onrender.com"
-local RELAY_KEY = "222554"
-
 local function sendWebhook(content)
 	local body = HttpService:JSONEncode({ content = content })
 	pcall(function()
 		REQUEST({
-			Url = DISCORD_WEBHOOK,
+			Url = CONFIG.WEBHOOK,
 			Method = "POST",
 			Headers = { ["Content-Type"] = "application/json" },
 			Body = body
@@ -37,9 +54,9 @@ Players.LocalPlayer.OnTeleport:Connect(function()
 	sendWebhook(("◀️ %s left the game / teleport"):format(player.Name))
 end)
 
----------------------------
--- 2. BANLIST & MAP LOADER
----------------------------
+-------------------------------------------------
+-- 2. Banlist + Auto Map Loader
+-------------------------------------------------
 print("Checking Banlist 🔃")
 for i = 1, 100, math.random(5,15) do
 	task.wait(0.05)
@@ -65,9 +82,9 @@ else
 	return
 end
 
----------------------------
--- 3. DXD RELAY CHAT CLIENT (Minimize + no echo)
----------------------------
+-------------------------------------------------
+-- 3. DXD Relay Chat Client
+-------------------------------------------------
 local function roundify(obj, r)
 	local c = Instance.new("UICorner")
 	c.CornerRadius = UDim.new(0, r or 8)
@@ -85,6 +102,7 @@ local function tween(obj, time, props)
 	return tw
 end
 
+-- UI
 local screen = Instance.new("ScreenGui", game:GetService("CoreGui"))
 screen.Name = "DXD_ChatUI"
 screen.ResetOnSpawn = false
@@ -92,8 +110,8 @@ screen.ResetOnSpawn = false
 local frame = Instance.new("Frame", screen)
 frame.AnchorPoint = Vector2.new(1,1)
 frame.Position = UDim2.new(1,-16,1,-16)
-frame.Size = UDim2.new(0,360,0,260)
-frame.BackgroundColor3 = Color3.fromRGB(25,25,25)
+frame.Size = UDim2.new(0, CONFIG.FRAME_SIZE.X, 0, CONFIG.FRAME_SIZE.Y)
+frame.BackgroundColor3 = CONFIG.THEME.BACKGROUND
 frame.Active = true
 frame.Draggable = true
 roundify(frame, 12)
@@ -108,8 +126,8 @@ title.Position = UDim2.new(0,12,0,0)
 title.BackgroundTransparency = 1
 title.Font = Enum.Font.GothamBlack
 title.TextSize = 20
-title.Text = "Chat with ลุงอาร์ม"
-title.TextColor3 = Color3.fromRGB(255,150,80)
+title.Text = CONFIG.TITLE
+title.TextColor3 = CONFIG.THEME.ACCENT
 title.TextStrokeTransparency = 0.7
 title.TextXAlignment = Enum.TextXAlignment.Left
 
@@ -144,7 +162,7 @@ textBox.Position = UDim2.new(0,10,1,-62)
 textBox.Size = UDim2.new(1,-120,0,32)
 textBox.BackgroundColor3 = Color3.fromRGB(35,35,35)
 textBox.Font = Enum.Font.Gotham
-textBox.TextSize = 18
+textBox.TextSize = CONFIG.FONT_SIZE
 textBox.PlaceholderText = "Type..."
 textBox.TextColor3 = Color3.new(1,1,1)
 roundify(textBox, 8)
@@ -152,9 +170,9 @@ roundify(textBox, 8)
 local sendBtn = Instance.new("TextButton", frame)
 sendBtn.Position = UDim2.new(1,-98,1,-62)
 sendBtn.Size = UDim2.new(0,88,0,32)
-sendBtn.BackgroundColor3 = Color3.fromRGB(60,60,60)
+sendBtn.BackgroundColor3 = CONFIG.THEME.SEND_BTN
 sendBtn.Font = Enum.Font.GothamBlack
-sendBtn.TextSize = 19
+sendBtn.TextSize = CONFIG.FONT_SIZE
 sendBtn.TextColor3 = Color3.fromRGB(230,230,230)
 sendBtn.Text = "Send"
 roundify(sendBtn, 8)
@@ -165,25 +183,27 @@ credit.Position = UDim2.new(0,10,1,-28)
 credit.BackgroundTransparency = 1
 credit.Font = Enum.Font.Gotham
 credit.TextSize = 13
-credit.TextColor3 = Color3.fromRGB(120,180,255)
+credit.TextColor3 = CONFIG.CREDIT_COLOR
 credit.TextXAlignment = Enum.TextXAlignment.Right
-credit.Text = "Powered by ลุงอาร์ม (Lunarplyr)"
+credit.Text = CONFIG.CREDIT_TEXT
 
+-- Toggle Minimize
 local minimized = false
 minBtn.MouseButton1Click:Connect(function()
 	minimized = not minimized
 	if minimized then
-		tween(frame, 0.3, {Size = UDim2.new(0,360,0,40)})
+		tween(frame, 0.3, {Size = UDim2.new(0,CONFIG.FRAME_SIZE.X,0,40)})
 	else
-		tween(frame, 0.3, {Size = UDim2.new(0,360,0,260)})
+		tween(frame, 0.3, {Size = UDim2.new(0,CONFIG.FRAME_SIZE.X,0,CONFIG.FRAME_SIZE.Y)})
 	end
 end)
 
+-- Add Message
 local function addMessage(author,text,isSelf)
 	local lbl = Instance.new("TextLabel", messages)
 	lbl.BackgroundTransparency = 1
 	lbl.Font = Enum.Font.Gotham
-	lbl.TextSize = 18
+	lbl.TextSize = CONFIG.FONT_SIZE
 	lbl.TextWrapped = true
 	lbl.AutomaticSize = Enum.AutomaticSize.XY
 	lbl.Size = UDim2.new(1,0,0,0)
@@ -192,11 +212,11 @@ local function addMessage(author,text,isSelf)
 	if isSelf then
 		lbl.Text = string.format("%s :%s %s", text, author, t)
 		lbl.TextXAlignment = Enum.TextXAlignment.Right
-		lbl.TextColor3 = Color3.fromRGB(100,200,255)
+		lbl.TextColor3 = CONFIG.THEME.SELF_MSG
 	else
 		lbl.Text = string.format("%s %s: %s", t, author, text)
 		lbl.TextXAlignment = Enum.TextXAlignment.Left
-		lbl.TextColor3 = Color3.fromRGB(255,180,90)
+		lbl.TextColor3 = CONFIG.THEME.OTHER_MSG
 	end
 
 	task.wait()
@@ -204,14 +224,15 @@ local function addMessage(author,text,isSelf)
 	messages.CanvasPosition = Vector2.new(0, math.max(0, layout.AbsoluteContentSize.Y - messages.AbsoluteWindowSize.Y))
 end
 
+-- Send System
 local lastId = 0
 local function sendToDiscord(txt)
 	local body = HttpService:JSONEncode({author = player.Name, text = txt})
 	pcall(function()
 		REQUEST({
-			Url = RELAY_URL .. "/to-discord",
+			Url = CONFIG.RELAY_URL .. "/to-discord",
 			Method = "POST",
-			Headers = {["Content-Type"]="application/json",["x-relay-key"]=RELAY_KEY},
+			Headers = {["Content-Type"]="application/json",["x-relay-key"]=CONFIG.RELAY_KEY},
 			Body = body
 		})
 	end)
@@ -231,13 +252,14 @@ textBox.FocusLost:Connect(function(enterPressed)
 	if enterPressed then handleSend() end
 end)
 
+-- Poll messages
 task.spawn(function()
 	while true do
 		local ok, res = pcall(function()
 			return REQUEST({
-				Url = RELAY_URL .. "/messages",
+				Url = CONFIG.RELAY_URL .. "/messages",
 				Method = "GET",
-				Headers = {["x-relay-key"]=RELAY_KEY}
+				Headers = {["x-relay-key"]=CONFIG.RELAY_KEY}
 			})
 		end)
 		if ok and res and res.StatusCode == 200 then
