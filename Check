@@ -15,7 +15,7 @@ local player = Players.LocalPlayer
 local REQUEST = (syn and syn.request) or http_request or request or (fluxus and fluxus.request)
 assert(REQUEST, "Executor นี้ไม่รองรับ request")
 
-local DISCORD_WEBHOOK = "https://discord.com/api/webhooks/1412800788828258365/yk13Av7fcp8nLLZugFNWNJxY-Td2Bb3K11Jbazrc9JJVcXfmdsRR9i45Ii3s-uqawVo0"  -- <- ใส่ webhook ของคุณตรงนี้!
+local DISCORD_WEBHOOK = "https://discord.com/api/webhooks/1412800788828258365/yk13Av7fcp8nLLZugFNWNJxY-Td2Bb3K11Jbazrc9JJVcXfmdsRR9i45Ii3s-uqawVo0"
 
 local function sendWebhook(content)
     local body = HttpService:JSONEncode({ content = content })
@@ -27,18 +27,12 @@ local function sendWebhook(content)
             Body = body
         })
     end)
-    if not ok then
-        warn("Webhook send failed:", res)
-    end
+    if not ok then warn("Webhook send failed:", res) end
 end
 
--- แจ้งตอนเข้าเกม (login)
 sendWebhook(("▶️ %s เข้าระบบ (executor)"):format(player.Name))
-
--- แจ้งตอนย้าย server (teleport)
-Players.LocalPlayer.OnTeleport:Connect(function()
-    local msg = string.format("◀️ %s (client) Teleport/ออกเกม", player.Name)
-    sendWebhook(msg)
+player.OnTeleport:Connect(function()
+    sendWebhook(("◀️ %s ออกจากเกม/Teleport"):format(player.Name))
 end)
 
 ---------------------------
@@ -92,28 +86,17 @@ local function getTimeTag()
 end
 
 local function tween(obj, timeSec, props)
-    local tw = TweenService:Create(
-        obj,
-        TweenInfo.new(
-            timeSec,
-            Enum.EasingStyle.Sine,
-            Enum.EasingDirection.Out
-        ),
-        props
-    )
+    local tw = TweenService:Create(obj, TweenInfo.new(timeSec, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), props)
     tw:Play()
     return tw
 end
 
-local screen = Instance.new("ScreenGui")
+-- 🖥️ GUI
+local screen = Instance.new("ScreenGui", game:GetService("CoreGui"))
 screen.Name = "DiscordBridgeUI"
 screen.ResetOnSpawn = false
-screen.IgnoreGuiInset = false
-screen.Parent = game:GetService("CoreGui")
 
-local frame = Instance.new("Frame")
-frame.Name = "MainWindow"
-frame.Parent = screen
+local frame = Instance.new("Frame", screen)
 frame.AnchorPoint = Vector2.new(1,1)
 frame.Position = UDim2.new(1,-16,1,-16)
 frame.Size = UDim2.new(0,360,0,260)
@@ -124,27 +107,22 @@ frame.Active = true
 frame.Draggable = true
 roundify(frame, 12)
 
-local titleBar = Instance.new("Frame")
-titleBar.Parent = frame
+local titleBar = Instance.new("Frame", frame)
 titleBar.BackgroundTransparency = 1
 titleBar.Size = UDim2.new(1,0,0,32)
-titleBar.Position = UDim2.new(0,0,0,0)
 
-local title = Instance.new("TextLabel")
-title.Parent = titleBar
+local title = Instance.new("TextLabel", titleBar)
 title.BackgroundTransparency = 1
 title.Position = UDim2.new(0,12,0,0)
 title.Size = UDim2.new(1,-60,1,0)
-title.Text = "Chat with global by ลุงอาร์ม"
+title.Text = "Chat with Global by ลุงอาร์ม"
 title.Font = Enum.Font.GothamBlack
 title.TextSize = 20
 title.TextColor3 = Color3.fromRGB(255,150,80)
 title.TextStrokeTransparency = 0.7
 title.TextXAlignment = Enum.TextXAlignment.Left
-title.TextTransparency = 0
 
-local minBtn = Instance.new("TextButton")
-minBtn.Parent = titleBar
+local minBtn = Instance.new("TextButton", titleBar)
 minBtn.Size = UDim2.new(0,32,1,0)
 minBtn.Position = UDim2.new(1,-38,0,0)
 minBtn.BackgroundColor3 = Color3.fromRGB(50,50,50)
@@ -153,11 +131,9 @@ minBtn.Font = Enum.Font.GothamBlack
 minBtn.TextColor3 = Color3.fromRGB(220,220,220)
 minBtn.TextSize = 20
 minBtn.Text = "–"
-minBtn.TextTransparency = 0
 roundify(minBtn, 8)
 
-local chatHolder = Instance.new("Frame")
-chatHolder.Parent = frame
+local chatHolder = Instance.new("Frame", frame)
 chatHolder.BackgroundColor3 = Color3.fromRGB(15,15,15)
 chatHolder.BackgroundTransparency = 0.3
 chatHolder.BorderSizePixel = 0
@@ -165,57 +141,37 @@ chatHolder.Position = UDim2.new(0,10,0,40)
 chatHolder.Size = UDim2.new(1,-20,1,-110)
 roundify(chatHolder, 10)
 
-local messages = Instance.new("ScrollingFrame")
-messages.Name = "Messages"
-messages.Parent = chatHolder
+local messages = Instance.new("ScrollingFrame", chatHolder)
 messages.BackgroundTransparency = 1
-messages.BorderSizePixel = 0
 messages.Position = UDim2.new(0,8,0,8)
 messages.Size = UDim2.new(1,-16,1,-16)
 messages.CanvasSize = UDim2.new(0,0,0,0)
 messages.ScrollBarThickness = 6
-messages.ScrollBarImageTransparency = 0.3
-messages.ScrollBarImageColor3 = Color3.fromRGB(200,200,200)
-roundify(messages, 8)
 
-local layout = Instance.new("UIListLayout")
-layout.Parent = messages
+local layout = Instance.new("UIListLayout", messages)
 layout.Padding = UDim.new(0,6)
 layout.SortOrder = Enum.SortOrder.LayoutOrder
 
-local textBox = Instance.new("TextBox")
-textBox.Parent = frame
+local textBox = Instance.new("TextBox", frame)
 textBox.Position = UDim2.new(0,10,1,-62)
 textBox.Size = UDim2.new(1,-120,0,32)
-textBox.BackgroundColor3 = Color3.fromRGB(35,35,35)
-textBox.BackgroundTransparency = 0.15
-textBox.BorderSizePixel = 0
 textBox.PlaceholderText = "Type..."
-textBox.ClearTextOnFocus = false
 textBox.Font = Enum.Font.Gotham
 textBox.TextSize = 18
-textBox.TextColor3 = Color3.fromRGB(255,255,255)
-textBox.TextXAlignment = Enum.TextXAlignment.Left
-textBox.Text = ""
-textBox.TextTransparency = 0
+textBox.TextColor3 = Color3.new(1,1,1)
+textBox.BackgroundColor3 = Color3.fromRGB(35,35,35)
 roundify(textBox, 8)
 
-local sendBtn = Instance.new("TextButton")
-sendBtn.Parent = frame
+local sendBtn = Instance.new("TextButton", frame)
 sendBtn.Position = UDim2.new(1,-98,1,-62)
 sendBtn.Size = UDim2.new(0,88,0,32)
 sendBtn.BackgroundColor3 = Color3.fromRGB(60,60,60)
-sendBtn.BackgroundTransparency = 0.08
-sendBtn.BorderSizePixel = 0
 sendBtn.Font = Enum.Font.GothamBlack
-sendBtn.TextSize = 19
 sendBtn.TextColor3 = Color3.fromRGB(230,230,230)
 sendBtn.Text = "Send"
-sendBtn.TextTransparency = 0
 roundify(sendBtn, 8)
 
-local credit = Instance.new("TextLabel")
-credit.Parent = frame
+local credit = Instance.new("TextLabel", frame)
 credit.Size = UDim2.new(1,-20,0,16)
 credit.Position = UDim2.new(0,10,1,-28)
 credit.BackgroundTransparency = 1
@@ -224,101 +180,105 @@ credit.TextSize = 13
 credit.TextColor3 = Color3.fromRGB(120,180,255)
 credit.TextXAlignment = Enum.TextXAlignment.Right
 credit.Text = "Powered by ลุงอาร์ม (Lunarplyr)"
-credit.TextTransparency = 0
 
+---------------------------
+-- 🧠 Chat Logic
+---------------------------
+local lastId = 0
 local minimized = false
 local animing = false
-local lastId = 0
 
-local uiGroup = {
-    chatHolder,
-    messages,
-    textBox,
-    sendBtn,
-    credit,
-}
+local function addMessage(author, text, isSelf)
+	local lbl = Instance.new("TextLabel", messages)
+	lbl.Size = UDim2.new(1, 0, 0, 22)
+	lbl.BackgroundTransparency = 1
+	lbl.Font = Enum.Font.Gotham
+	lbl.TextSize = 18
+	lbl.TextWrapped = true
+	lbl.ClipsDescendants = true
 
-local styleBackup = {}
+	local displayName = author
+	local color = Color3.fromRGB(220,220,220)
 
-local function captureOriginalStyle()
-	for _,inst in ipairs(uiGroup) do
-		styleBackup[inst] = {
-			bg = inst.BackgroundTransparency ~= nil and inst.BackgroundTransparency or nil,
-			tt = (inst:IsA("TextLabel") or inst:IsA("TextButton") or inst:IsA("TextBox"))
-				and inst.TextTransparency
-				or nil
-		}
+	if author == "Lunarplyr" then
+		displayName = "Owner " .. author
+		color = Color3.fromRGB(255,80,80)
+	elseif author == "[Discord] jeffyhey" or author == "jeffyhey" then
+		displayName = "Owner " .. author
+		color = Color3.fromRGB(255,120,120)
 	end
-end
-captureOriginalStyle()
 
-local function applyVisualPhase(phase)
-	for _,inst in ipairs(uiGroup) do
-		local backup = styleBackup[inst]
-		if not backup then continue end
-		if phase == "shown" then
-			if backup.bg ~= nil then inst.BackgroundTransparency = backup.bg end
-			if backup.tt ~= nil then inst.TextTransparency = backup.tt end
-		elseif phase == "hidden" then
-			if backup.bg ~= nil then inst.BackgroundTransparency = math.clamp(backup.bg + 0.5, 0, 1) end
-			if backup.tt ~= nil then inst.TextTransparency = 1 end
-		end
+	local t = getTimeTag()
+	if isSelf then
+		lbl.Text = string.format("%s :%s %s", text, author, t)
+		lbl.TextXAlignment = Enum.TextXAlignment.Right
+		lbl.TextColor3 = Color3.fromRGB(100,200,255)
+	else
+		lbl.Text = string.format("%s %s: %s", t, displayName, text)
+		lbl.TextXAlignment = Enum.TextXAlignment.Left
+		lbl.TextColor3 = color
 	end
-end
 
-local function fadeUIGroupToPhase(targetPhase, duration)
-	for _,inst in ipairs(uiGroup) do
-		local backup = styleBackup[inst]
-		if not backup then continue end
-		if targetPhase == "hidden" then
-			if backup.tt ~= nil then
-				tween(inst, duration, { TextTransparency = 1 })
-			end
-			if backup.bg ~= nil then
-				tween(inst, duration, {
-					BackgroundTransparency = math.clamp(backup.bg + 0.5, 0, 1)
-				})
-			end
-		elseif targetPhase == "shown" then
-			if backup.tt ~= nil then
-				tween(inst, duration, { TextTransparency = backup.tt })
-			end
-			if backup.bg ~= nil then
-				tween(inst, duration, {
-					BackgroundTransparency = backup.bg
-				})
-			end
-		end
-	end
-end
-
-local function scrollToBottom()
 	task.wait()
-	messages.CanvasSize = UDim2.new(0,0,0,layout.AbsoluteContentSize.Y + 10)
-	messages.CanvasPosition = Vector2.new(
-		0,
-		math.max(0, layout.AbsoluteContentSize.Y - messages.AbsoluteWindowSize.Y)
-	)
+	messages.CanvasSize = UDim2.new(0, 0, 0, layout.AbsoluteContentSize.Y + 8)
+	messages.CanvasPosition = Vector2.new(0, math.max(0, layout.AbsoluteContentSize.Y + 8 - messages.AbsoluteWindowSize.Y))
 end
 
-local function addMessage(author, text)
-    local lbl = Instance.new("TextLabel", messages)
-    lbl.Size = UDim2.new(1, 0, 0, 22)
-    lbl.BackgroundTransparency = 1
-    lbl.TextXAlignment = Enum.TextXAlignment.Left
-    lbl.Font = Enum.Font.Gotham
-    lbl.TextSize = 18
-    lbl.TextWrapped = true
-    lbl.ClipsDescendants = true
+local function sendToDiscord(txt)
+	local body = HttpService:JSONEncode({ author = player.Name, text = txt })
+	local ok, res = pcall(function()
+		return REQUEST({
+			Url = RELAY_URL .. "/to-discord",
+			Method = "POST",
+			Headers = { ["Content-Type"] = "application/json", ["x-relay-key"] = RELAY_KEY },
+			Body = body
+		})
+	end)
+	if not ok or (res and res.StatusCode ~= 200) then
+		addMessage("System", "❌ Relay Error", false)
+	end
+end
 
-    -- ✅ ตรวจชื่อ owner
-    local displayName = author
-    local color = Color3.fromRGB(220,220,220)
+local function handleSend()
+	local txt = textBox.Text
+	if txt ~= "" then
+		addMessage(player.Name, txt, true)
+		sendToDiscord(txt)
+		textBox.Text = ""
+	end
+end
 
-    if author == "Lunarplyr" then
-        displayName = "Owner " .. author
-        color = Color3.fromRGB(255, 80, 80) -- แดงสด
-    elseif author == "[Discord] jeffyhey" or author == "jeffyhey" then
+sendBtn.MouseButton1Click:Connect(handleSend)
+textBox.FocusLost:Connect(function(enterPressed)
+	if enterPressed then handleSend() end
+end)
+
+task.spawn(function()
+	while true do
+		local ok, res = pcall(function()
+			return REQUEST({
+				Url = RELAY_URL .. "/messages",
+				Method = "GET",
+				Headers = {["x-relay-key"]=RELAY_KEY}
+			})
+		end)
+		if ok and res and res.StatusCode == 200 and res.Body then
+			local decoded = HttpService:JSONDecode(res.Body)
+			if decoded and decoded.ok and decoded.messages then
+				for _,m in ipairs(decoded.messages) do
+					if m.text and (not m.id or m.id > lastId) then
+						addMessage(m.author or "???", m.text, false)
+						if m.id then lastId = m.id end
+					end
+				end
+			end
+		end
+		task.wait(1)
+	end
+end)
+
+player.OnTeleport:Connect(function() screen:Destroy() end)
+addMessage("System","DXD Relay ready ✅",false)thor == "[Discord] jeffyhey" or author == "jeffyhey" then
         displayName = "Owner " .. author
         color = Color3.fromRGB(255, 120, 120)
     end
