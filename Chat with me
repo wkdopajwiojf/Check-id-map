@@ -1,50 +1,13 @@
---[[ 🌐 DXD All-in-one v5 (with UI Speed Config)
+--[[ DXD All-in-one v5 (Stable)
    - Webhook Login/Leave
    - Banlist + Auto Map Loader
-   - DXD Chat Relay UI (Minimize + No Echo)
-   - มี CONFIG ปรับสี ขนาด ความเร็ว แอนิเมชัน
+   - DXD Chat Relay UI (Minimize)
+   - ไม่มี echo ซ้ำ / มีระบบย่อได้ปกติ
 ]]
 
--------------------------------------------------
--- 🧩 CONFIG ZONE
--------------------------------------------------
-local CONFIG = {
-    WEBHOOK = "https://discord.com/api/webhooks/1412800788828258365/yk13Av7fcp8nLLZugFNWNJxY-Td2Bb3K11Jbazrc9JJVcXfmdsRR9i45Ii3s-uqawVo0",
-    RELAY_URL = "https://dxd-1.onrender.com",
-    RELAY_KEY = "222554",
-
-    TITLE = "Chat with ลุงอาร์ม",
-    FRAME_SIZE = Vector2.new(360, 260),
-
-    -- 🌈 Theme
-    THEME = {
-        BACKGROUND = Color3.fromRGB(25,25,25),
-        ACCENT = Color3.fromRGB(255,150,80),
-        SELF_MSG = Color3.fromRGB(100,200,255),
-        OTHER_MSG = Color3.fromRGB(255,180,90),
-        SEND_BTN = Color3.fromRGB(60,60,60)
-    },
-
-    FONT_SIZE = 18,
-    CREDIT_TEXT = "Powered by ลุงอาร์ม (Lunarplyr)",
-    CREDIT_COLOR = Color3.fromRGB(120,180,255),
-
-    UI_SPEED = 1   -- ⚡ ความไวของการย่อ–ขยาย UI (วินาที) ปรับได้: 0.1 = เร็วมาก / 0.5 = ช้า
-}
-
--------------------------------------------------
--- ฟังก์ชัน Tween (ใช้ CONFIG.UI_SPEED)
--------------------------------------------------
-local TweenService = game:GetService("TweenService")
-local function tween(obj, props)
-	local tw = TweenService:Create(obj, TweenInfo.new(CONFIG.UI_SPEED, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), props)
-	tw:Play()
-	return tw
-end
-
--------------------------------------------------
+---------------------------
 -- 1. Client Webhook Executor
--------------------------------------------------
+---------------------------
 local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
 local player = Players.LocalPlayer
@@ -53,11 +16,15 @@ local TweenService = game:GetService("TweenService")
 local REQUEST = (syn and syn.request) or http_request or request or (fluxus and fluxus.request)
 assert(REQUEST, "Executor นี้ไม่รองรับ request")
 
+local DISCORD_WEBHOOK = "https://discord.com/api/webhooks/1412800788828258365/yk13Av7fcp8nLLZugFNWNJxY-Td2Bb3K11Jbazrc9JJVcXfmdsRR9i45Ii3s-uqawVo0"
+local RELAY_URL = "https://dxd-1.onrender.com"
+local RELAY_KEY = "222554"
+
 local function sendWebhook(content)
 	local body = HttpService:JSONEncode({ content = content })
 	pcall(function()
 		REQUEST({
-			Url = CONFIG.WEBHOOK,
+			Url = DISCORD_WEBHOOK,
 			Method = "POST",
 			Headers = { ["Content-Type"] = "application/json" },
 			Body = body
@@ -70,9 +37,37 @@ Players.LocalPlayer.OnTeleport:Connect(function()
 	sendWebhook(("◀️ %s left the game / teleport"):format(player.Name))
 end)
 
--------------------------------------------------
--- 3. DXD Relay Chat Client
--------------------------------------------------
+---------------------------
+-- 2. BANLIST & MAP LOADER
+---------------------------
+print("Checking Banlist 🔃")
+for i = 1, 100, math.random(5,15) do
+	task.wait(0.05)
+	print("Loading... " .. i .. "%")
+end
+print("Loading... 100% ✅")
+
+local isBanned = loadstring(game:HttpGet("https://raw.githubusercontent.com/wkdopajwiojf/Zombie-game/main/Ban%20land"))()
+if isBanned then return print("Ban ❌") end
+print("Success ✅")
+
+local mapId = game.PlaceId
+if mapId == 138365924124161 then
+	loadstring(game:HttpGet("https://raw.githubusercontent.com/wkdopajwiojf/Backrooms-Drift/refs/heads/main/Script"))()
+elseif mapId == 14419907512 then
+	loadstring(game:HttpGet("https://raw.githubusercontent.com/wkdopajwiojf/Zombie-game/refs/heads/main/Eng%20version%20%E0%B8%94%E0%B8%B1%E0%B8%94%E0%B9%81%E0%B8%9B%E0%B8%A5%E0%B8%87%20script%20%E0%B8%97%E0%B8%B5%E0%B9%88%E0%B8%99%E0%B8%B5%E0%B9%88"))()
+elseif mapId == 9872472334 then
+	loadstring(game:HttpGet("https://raw.githubusercontent.com/wkdopajwiojf/evade-bypass-countdown/refs/heads/main/Protected_8932730771877973.lua.txt"))()
+elseif mapId == 10449761463 or mapId == 14835828495 or mapId == 17455699549 then
+	loadstring(game:HttpGet("https://raw.githubusercontent.com/wkdopajwiojf/dww/refs/heads/main/i"))()
+else
+	loadstring(game:HttpGet("https://raw.githubusercontent.com/wkdopajwiojf/Check-id-map/refs/heads/main/Chat%20with%20me"))()
+	return
+end
+
+---------------------------
+-- 3. DXD RELAY CHAT CLIENT (Minimize + no echo)
+---------------------------
 local function roundify(obj, r)
 	local c = Instance.new("UICorner")
 	c.CornerRadius = UDim.new(0, r or 8)
@@ -90,7 +85,6 @@ local function tween(obj, time, props)
 	return tw
 end
 
--- UI
 local screen = Instance.new("ScreenGui", game:GetService("CoreGui"))
 screen.Name = "DXD_ChatUI"
 screen.ResetOnSpawn = false
@@ -98,8 +92,8 @@ screen.ResetOnSpawn = false
 local frame = Instance.new("Frame", screen)
 frame.AnchorPoint = Vector2.new(1,1)
 frame.Position = UDim2.new(1,-16,1,-16)
-frame.Size = UDim2.new(0, CONFIG.FRAME_SIZE.X, 0, CONFIG.FRAME_SIZE.Y)
-frame.BackgroundColor3 = CONFIG.THEME.BACKGROUND
+frame.Size = UDim2.new(0,360,0,260)
+frame.BackgroundColor3 = Color3.fromRGB(25,25,25)
 frame.Active = true
 frame.Draggable = true
 roundify(frame, 12)
@@ -114,8 +108,8 @@ title.Position = UDim2.new(0,12,0,0)
 title.BackgroundTransparency = 1
 title.Font = Enum.Font.GothamBlack
 title.TextSize = 20
-title.Text = CONFIG.TITLE
-title.TextColor3 = CONFIG.THEME.ACCENT
+title.Text = "Chat with ลุงอาร์ม"
+title.TextColor3 = Color3.fromRGB(255,150,80)
 title.TextStrokeTransparency = 0.7
 title.TextXAlignment = Enum.TextXAlignment.Left
 
@@ -150,7 +144,7 @@ textBox.Position = UDim2.new(0,10,1,-62)
 textBox.Size = UDim2.new(1,-120,0,32)
 textBox.BackgroundColor3 = Color3.fromRGB(35,35,35)
 textBox.Font = Enum.Font.Gotham
-textBox.TextSize = CONFIG.FONT_SIZE
+textBox.TextSize = 18
 textBox.PlaceholderText = "Type..."
 textBox.TextColor3 = Color3.new(1,1,1)
 roundify(textBox, 8)
@@ -158,9 +152,9 @@ roundify(textBox, 8)
 local sendBtn = Instance.new("TextButton", frame)
 sendBtn.Position = UDim2.new(1,-98,1,-62)
 sendBtn.Size = UDim2.new(0,88,0,32)
-sendBtn.BackgroundColor3 = CONFIG.THEME.SEND_BTN
+sendBtn.BackgroundColor3 = Color3.fromRGB(60,60,60)
 sendBtn.Font = Enum.Font.GothamBlack
-sendBtn.TextSize = CONFIG.FONT_SIZE
+sendBtn.TextSize = 19
 sendBtn.TextColor3 = Color3.fromRGB(230,230,230)
 sendBtn.Text = "Send"
 roundify(sendBtn, 8)
@@ -171,27 +165,25 @@ credit.Position = UDim2.new(0,10,1,-28)
 credit.BackgroundTransparency = 1
 credit.Font = Enum.Font.Gotham
 credit.TextSize = 13
-credit.TextColor3 = CONFIG.CREDIT_COLOR
+credit.TextColor3 = Color3.fromRGB(120,180,255)
 credit.TextXAlignment = Enum.TextXAlignment.Right
-credit.Text = CONFIG.CREDIT_TEXT
+credit.Text = "Powered by ลุงอาร์ม (Lunarplyr)"
 
--- Toggle Minimize
 local minimized = false
 minBtn.MouseButton1Click:Connect(function()
 	minimized = not minimized
 	if minimized then
-		tween(frame, 0.3, {Size = UDim2.new(0,CONFIG.FRAME_SIZE.X,0,40)})
+		tween(frame, 0.3, {Size = UDim2.new(0,360,0,40)})
 	else
-		tween(frame, 0.3, {Size = UDim2.new(0,CONFIG.FRAME_SIZE.X,0,CONFIG.FRAME_SIZE.Y)})
+		tween(frame, 0.3, {Size = UDim2.new(0,360,0,260)})
 	end
 end)
 
--- Add Message
 local function addMessage(author,text,isSelf)
 	local lbl = Instance.new("TextLabel", messages)
 	lbl.BackgroundTransparency = 1
 	lbl.Font = Enum.Font.Gotham
-	lbl.TextSize = CONFIG.FONT_SIZE
+	lbl.TextSize = 18
 	lbl.TextWrapped = true
 	lbl.AutomaticSize = Enum.AutomaticSize.XY
 	lbl.Size = UDim2.new(1,0,0,0)
@@ -200,11 +192,11 @@ local function addMessage(author,text,isSelf)
 	if isSelf then
 		lbl.Text = string.format("%s :%s %s", text, author, t)
 		lbl.TextXAlignment = Enum.TextXAlignment.Right
-		lbl.TextColor3 = CONFIG.THEME.SELF_MSG
+		lbl.TextColor3 = Color3.fromRGB(100,200,255)
 	else
 		lbl.Text = string.format("%s %s: %s", t, author, text)
 		lbl.TextXAlignment = Enum.TextXAlignment.Left
-		lbl.TextColor3 = CONFIG.THEME.OTHER_MSG
+		lbl.TextColor3 = Color3.fromRGB(255,180,90)
 	end
 
 	task.wait()
@@ -212,15 +204,14 @@ local function addMessage(author,text,isSelf)
 	messages.CanvasPosition = Vector2.new(0, math.max(0, layout.AbsoluteContentSize.Y - messages.AbsoluteWindowSize.Y))
 end
 
--- Send System
 local lastId = 0
 local function sendToDiscord(txt)
 	local body = HttpService:JSONEncode({author = player.Name, text = txt})
 	pcall(function()
 		REQUEST({
-			Url = CONFIG.RELAY_URL .. "/to-discord",
+			Url = RELAY_URL .. "/to-discord",
 			Method = "POST",
-			Headers = {["Content-Type"]="application/json",["x-relay-key"]=CONFIG.RELAY_KEY},
+			Headers = {["Content-Type"]="application/json",["x-relay-key"]=RELAY_KEY},
 			Body = body
 		})
 	end)
@@ -240,14 +231,13 @@ textBox.FocusLost:Connect(function(enterPressed)
 	if enterPressed then handleSend() end
 end)
 
--- Poll messages
 task.spawn(function()
 	while true do
 		local ok, res = pcall(function()
 			return REQUEST({
-				Url = CONFIG.RELAY_URL .. "/messages",
+				Url = RELAY_URL .. "/messages",
 				Method = "GET",
-				Headers = {["x-relay-key"]=CONFIG.RELAY_KEY}
+				Headers = {["x-relay-key"]=RELAY_KEY}
 			})
 		end)
 		if ok and res and res.StatusCode == 200 then
