@@ -1,8 +1,8 @@
 --[[ DXD All-in-one: Webhook Login/Leave + Banlist + Map Loader + DXD Relay UI v5
-- แจ้ง Discord Webhook ตอนเข้า/ออก
-- เช็คแบนก่อนรัน
-- โหลด script ตามแมพ
-- UI DXD Chat Client v5 (animation, มุมมน, ฝั่งสี)
+-- แจ้ง Discord Webhook ตอนเข้า/ออก
+-- เช็คแบนก่อนรัน
+-- โหลด script ตามแมพ
+-- UI DXD Chat Client v5 (animation, มุมมน, ฝั่งสี)
 ]]
 
 -- 1. Client Webhook Executor
