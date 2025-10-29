@@ -1,50 +1,19 @@
---[[ DXD All-in-one: Webhook Login/Leave + Banlist + Map Loader + DXD Relay UI v5
-    - แจ้ง Discord Webhook ตอนเข้า/ออก
-    - เช็คแบนก่อนรัน
-    - โหลด script ตามแมพ
-    - UI DXD Chat Client v5 (animation, มุมมน, ฝั่งสี)
+--[[ DXD Relay UI: Banlist Checker + Map Loader + Chat UI v5.1
+   - เช็คแบนก่อนรัน ถ้าแบนหยุดทันที
+   - โหลด script เฉพาะแต่ละแมพ (PlaceId)
+   - เตะถ้า map ไม่ตรง
+   - Bubble Chat UI (Owner Highlight, Auto-scroll, แสดงเวลา)
+   - ข้อความฝั่งตัวเองชิดขวา สีฟ้า / ฝั่งอื่นชิดซ้าย สีส้ม / Owner สีแดง
 ]]
 
----------------------------
--- 1. Client Webhook Executor
----------------------------
+-- 1. เช็คแบนก่อนทุกอย่าง
 local HttpService = game:GetService("HttpService")
-local Players = game:GetService("Players")
-local player = Players.LocalPlayer
-
-local REQUEST = (syn and syn.request) or http_request or request or (fluxus and fluxus.request)
-assert(REQUEST, "Executor นี้ไม่รองรับ request")
-
-local DISCORD_WEBHOOK = "https://discord.com/api/webhooks/1412800788828258365/yk13Av7fcp8nLLZugFNWNJxY-Td2Bb3K11Jbazrc9JJVcXfmdsRR9i45Ii3s-uqawVo0"
-
-local function sendWebhook(content)
-    local body = HttpService:JSONEncode({ content = content })
-    local ok, res = pcall(function()
-        return REQUEST({
-            Url = DISCORD_WEBHOOK,
-            Method = "POST",
-            Headers = { ["Content-Type"] = "application/json" },
-            Body = body
-        })
-    end)
-    if not ok then warn("Webhook send failed:", res) end
-end
-
-sendWebhook(("▶️ %s เข้าระบบ (executor)"):format(player.Name))
-player.OnTeleport:Connect(function()
-    sendWebhook(("◀️ %s ออกจากเกม/Teleport"):format(player.Name))
-end)
-
----------------------------
--- 2. BANLIST & MAP LOADER
----------------------------
 print("Checking Banlist 🔃")
 for i = 1, 100, math.random(5, 15) do
     task.wait(0.05)
     print("Loading... " .. i .. "%")
 end
 print("Loading... 100% ✅")
-
 local isBanned = loadstring(game:HttpGet('https://raw.githubusercontent.com/wkdopajwiojf/Zombie-game/main/Ban%20land'))()
 if isBanned then
     print("Ban ❌")
@@ -52,6 +21,7 @@ if isBanned then
 end
 print("Success ✅")
 
+-- 2. Loader เฉพาะ map (PlaceId)
 local mapId = game.PlaceId
 if mapId == 138365924124161 then
     loadstring(game:HttpGet('https://raw.githubusercontent.com/wkdopajwiojf/Backrooms-Drift/refs/heads/main/Script'))()
@@ -62,38 +32,25 @@ elseif mapId == 9872472334 then
 elseif mapId == 10449761463 or mapId == 14835828495 or mapId == 17455699549 then
     loadstring(game:HttpGet('https://raw.githubusercontent.com/wkdopajwiojf/dww/refs/heads/main/i'))()
 else
+    -- เตะหรือแสดงเตือน/โหลด script อื่นถ้า map ไม่ตรง
     loadstring(game:HttpGet('https://raw.githubusercontent.com/wkdopajwiojf/Check-id-map/refs/heads/main/Chat%20with%20me'))()
     return
 end
 
----------------------------
--- 3. DXD DISCORD RELAY CHAT CLIENT v5
----------------------------
+-- 3. DXD Relay UI v5.1
+------------------------------------------------------
 local TweenService = game:GetService("TweenService")
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
 local RELAY_URL = "https://dxd-1.onrender.com"
 local RELAY_KEY = "222554"
 
-local function roundify(instance, radius)
-    local c = Instance.new("UICorner")
-    c.CornerRadius = UDim.new(0, radius or 8)
-    c.Parent = instance
-    return c
-end
+local REQUEST = (syn and syn.request) or http_request or request or (fluxus and fluxus.request)
+assert(REQUEST, "Executor นี้ไม่รองรับ request")
 
-local function getTimeTag()
-	local t = os.date("*t")
-	return string.format("[%02d:%02d]", t.hour, t.min)
-end
-
-local function tween(obj, timeSec, props)
-    local tw = TweenService:Create(obj, TweenInfo.new(timeSec, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), props)
-    tw:Play()
-    return tw
-end
-
--- 🖥️ GUI
+-- 🪟 GUI Setup
 local screen = Instance.new("ScreenGui", game:GetService("CoreGui"))
-screen.Name = "DiscordBridgeUI"
+screen.Name = "DXD_ChatUI"
 screen.ResetOnSpawn = false
 
 local frame = Instance.new("Frame", screen)
@@ -102,78 +59,46 @@ frame.Position = UDim2.new(1,-16,1,-16)
 frame.Size = UDim2.new(0,360,0,260)
 frame.BackgroundColor3 = Color3.fromRGB(25,25,25)
 frame.BackgroundTransparency = 0.08
-frame.BorderSizePixel = 0
 frame.Active = true
 frame.Draggable = true
-roundify(frame, 12)
+Instance.new("UICorner", frame).CornerRadius = UDim.new(0,12)
 
-local titleBar = Instance.new("Frame", frame)
-titleBar.BackgroundTransparency = 1
-titleBar.Size = UDim2.new(1,0,0,32)
-
-local title = Instance.new("TextLabel", titleBar)
-title.BackgroundTransparency = 1
-title.Position = UDim2.new(0,12,0,0)
-title.Size = UDim2.new(1,-60,1,0)
-title.Text = "Chat with Global by ลุงอาร์ม"
-title.Font = Enum.Font.GothamBlack
-title.TextSize = 20
-title.TextColor3 = Color3.fromRGB(255,150,80)
-title.TextStrokeTransparency = 0.7
-title.TextXAlignment = Enum.TextXAlignment.Left
-
-local minBtn = Instance.new("TextButton", titleBar)
-minBtn.Size = UDim2.new(0,32,1,0)
-minBtn.Position = UDim2.new(1,-38,0,0)
-minBtn.BackgroundColor3 = Color3.fromRGB(50,50,50)
-minBtn.BackgroundTransparency = 0.3
-minBtn.Font = Enum.Font.GothamBlack
-minBtn.TextColor3 = Color3.fromRGB(220,220,220)
-minBtn.TextSize = 20
-minBtn.Text = "–"
-roundify(minBtn, 8)
-
-local chatHolder = Instance.new("Frame", frame)
-chatHolder.BackgroundColor3 = Color3.fromRGB(15,15,15)
-chatHolder.BackgroundTransparency = 0.3
-chatHolder.BorderSizePixel = 0
-chatHolder.Position = UDim2.new(0,10,0,40)
-chatHolder.Size = UDim2.new(1,-20,1,-110)
-roundify(chatHolder, 10)
-
-local messages = Instance.new("ScrollingFrame", chatHolder)
+local messages = Instance.new("ScrollingFrame", frame)
+messages.Position = UDim2.new(0,10,0,40)
+messages.Size = UDim2.new(1,-20,1,-90)
 messages.BackgroundTransparency = 1
-messages.Position = UDim2.new(0,8,0,8)
-messages.Size = UDim2.new(1,-16,1,-16)
-messages.CanvasSize = UDim2.new(0,0,0,0)
 messages.ScrollBarThickness = 6
+messages.CanvasSize = UDim2.new(0,0,0,0)
+Instance.new("UICorner", messages).CornerRadius = UDim.new(0,8)
 
 local layout = Instance.new("UIListLayout", messages)
 layout.Padding = UDim.new(0,6)
 layout.SortOrder = Enum.SortOrder.LayoutOrder
 
 local textBox = Instance.new("TextBox", frame)
-textBox.Position = UDim2.new(0,10,1,-62)
+textBox.Position = UDim2.new(0,10,1,-42)
 textBox.Size = UDim2.new(1,-120,0,32)
 textBox.PlaceholderText = "Type..."
+textBox.ClearTextOnFocus = false
 textBox.Font = Enum.Font.Gotham
 textBox.TextSize = 18
 textBox.TextColor3 = Color3.new(1,1,1)
 textBox.BackgroundColor3 = Color3.fromRGB(35,35,35)
-roundify(textBox, 8)
+Instance.new("UICorner", textBox).CornerRadius = UDim.new(0,8)
 
 local sendBtn = Instance.new("TextButton", frame)
-sendBtn.Position = UDim2.new(1,-98,1,-62)
+sendBtn.Position = UDim2.new(1,-98,1,-42)
 sendBtn.Size = UDim2.new(0,88,0,32)
 sendBtn.BackgroundColor3 = Color3.fromRGB(60,60,60)
 sendBtn.Font = Enum.Font.GothamBlack
+sendBtn.TextSize = 19
 sendBtn.TextColor3 = Color3.fromRGB(230,230,230)
 sendBtn.Text = "Send"
-roundify(sendBtn, 8)
+Instance.new("UICorner", sendBtn).CornerRadius = UDim.new(0,8)
 
 local credit = Instance.new("TextLabel", frame)
 credit.Size = UDim2.new(1,-20,0,16)
-credit.Position = UDim2.new(0,10,1,-28)
+credit.Position = UDim2.new(0,10,1,-20)
 credit.BackgroundTransparency = 1
 credit.Font = Enum.Font.Gotham
 credit.TextSize = 13
@@ -181,25 +106,28 @@ credit.TextColor3 = Color3.fromRGB(120,180,255)
 credit.TextXAlignment = Enum.TextXAlignment.Right
 credit.Text = "Powered by ลุงอาร์ม (Lunarplyr)"
 
----------------------------
--- 🧠 Chat Logic
----------------------------
-local lastId = 0
-local minimized = false
-local animing = false
+-- ⏰ Utility
+local function getTimeTag()
+	local t = os.date("*t")
+	return string.format("[%02d:%02d]", t.hour, t.min)
+end
 
+-- 💬 เพิ่มข้อความ (Bubble, Owner Highlight)
 local function addMessage(author, text, isSelf)
-	local lbl = Instance.new("TextLabel", messages)
-	lbl.Size = UDim2.new(1, 0, 0, 22)
-	lbl.BackgroundTransparency = 1
-	lbl.Font = Enum.Font.Gotham
-	lbl.TextSize = 18
-	lbl.TextWrapped = true
-	lbl.ClipsDescendants = true
+	local line = Instance.new("TextLabel")
+	line.Parent = messages
+	line.BackgroundTransparency = 1
+	line.Font = Enum.Font.Gotham
+	line.TextSize = 18
+	line.TextWrapped = true
+	line.AutomaticSize = Enum.AutomaticSize.XY
+	line.Size = UDim2.new(1,0,0,0)
+	line.ClipsDescendants = true
+	line.TextTransparency = 0
 
+	-- Owner Highlight
 	local displayName = author
 	local color = Color3.fromRGB(220,220,220)
-
 	if author == "Lunarplyr" then
 		displayName = "Owner " .. author
 		color = Color3.fromRGB(255,80,80)
@@ -209,28 +137,32 @@ local function addMessage(author, text, isSelf)
 	end
 
 	local t = getTimeTag()
+
 	if isSelf then
-		lbl.Text = string.format("%s :%s %s", text, author, t)
-		lbl.TextXAlignment = Enum.TextXAlignment.Right
-		lbl.TextColor3 = Color3.fromRGB(100,200,255)
+		-- ฝั่งตัวเอง (ขวา ฟ้า)
+		line.Text = string.format("%s :%s %s", text, displayName, t)
+		line.TextXAlignment = Enum.TextXAlignment.Right
+		line.TextColor3 = Color3.fromRGB(100,200,255)
 	else
-		lbl.Text = string.format("%s %s: %s", t, displayName, text)
-		lbl.TextXAlignment = Enum.TextXAlignment.Left
-		lbl.TextColor3 = color
+		-- ฝั่งอื่น/Discord (ซ้าย)
+		line.Text = string.format("%s %s: %s", t, displayName, text)
+		line.TextXAlignment = Enum.TextXAlignment.Left
+		line.TextColor3 = color
 	end
 
 	task.wait()
-	messages.CanvasSize = UDim2.new(0, 0, 0, layout.AbsoluteContentSize.Y + 8)
-	messages.CanvasPosition = Vector2.new(0, math.max(0, layout.AbsoluteContentSize.Y + 8 - messages.AbsoluteWindowSize.Y))
+	messages.CanvasSize = UDim2.new(0,0,0,layout.AbsoluteContentSize.Y + 10)
+	messages.CanvasPosition = Vector2.new(0, math.max(0, layout.AbsoluteContentSize.Y - messages.AbsoluteWindowSize.Y))
 end
 
+-- 🚀 ส่งข้อความขึ้น Discord
 local function sendToDiscord(txt)
-	local body = HttpService:JSONEncode({ author = player.Name, text = txt })
+	local body = HttpService:JSONEncode({author = player.Name, text = txt})
 	local ok, res = pcall(function()
 		return REQUEST({
 			Url = RELAY_URL .. "/to-discord",
 			Method = "POST",
-			Headers = { ["Content-Type"] = "application/json", ["x-relay-key"] = RELAY_KEY },
+			Headers = {["Content-Type"]="application/json", ["x-relay-key"]=RELAY_KEY},
 			Body = body
 		})
 	end)
@@ -239,6 +171,7 @@ local function sendToDiscord(txt)
 	end
 end
 
+-- ระบบส่ง (ปุ่ม/Enter)
 local function handleSend()
 	local txt = textBox.Text
 	if txt ~= "" then
@@ -253,7 +186,9 @@ textBox.FocusLost:Connect(function(enterPressed)
 	if enterPressed then handleSend() end
 end)
 
+-- 🌐 Poll ข้อความใหม่จาก Relay ทุก 1 วิ
 task.spawn(function()
+	local lastId = 0
 	while true do
 		local ok, res = pcall(function()
 			return REQUEST({
@@ -277,157 +212,5 @@ task.spawn(function()
 	end
 end)
 
-player.OnTeleport:Connect(function() screen:Destroy() end)
-addMessage("System","DXD Relay ready ✅",false)thor == "[Discord] jeffyhey" or author == "jeffyhey" then
-        displayName = "Owner " .. author
-        color = Color3.fromRGB(255, 120, 120)
-    end
-
-    lbl.Text = ("[%s] %s"):format(displayName, text)
-    lbl.TextColor3 = color
-
-    -- 📜 Auto scroll
-    task.wait()
-    messages.CanvasSize = UDim2.new(0, 0, 0, uiList.AbsoluteContentSize.Y + 8)
-    messages.CanvasPosition = Vector2.new(0, math.max(0, uiList.AbsoluteContentSize.Y + 8 - messages.AbsoluteWindowSize.Y))
-end
-
-	local t = getTimeTag()
-	if isSelf then
-		line.Text = string.format("%s :%s %s", text, author, t)
-		line.TextXAlignment = Enum.TextXAlignment.Right
-		line.TextColor3 = Color3.fromRGB(100,200,255)
-	else
-		line.Text = string.format("%s %s: %s", t, author, text)
-		line.TextXAlignment = Enum.TextXAlignment.Left
-		line.TextColor3 = Color3.fromRGB(255,180,90)
-	end
-
-	scrollToBottom()
-end
-
-local function sendToDiscord(txt)
-	local body = HttpService:JSONEncode({
-		author = player.Name,
-		text = txt
-	})
-	local ok, res = pcall(function()
-		return REQUEST({
-			Url = RELAY_URL .. "/to-discord",
-			Method = "POST",
-			Headers = {
-				["Content-Type"] = "application/json",
-				["x-relay-key"] = RELAY_KEY,
-			},
-			Body = body
-		})
-	end)
-	if not ok then
-		addMessage("System","❌ Request error", false)
-	elseif res.StatusCode ~= 200 then
-		addMessage("System","❌ Relay error: "..tostring(res.Body), false)
-	end
-end
-
-local function handleSend()
-	local txt = textBox.Text
-	if txt ~= "" then
-		addMessage(player.Name, txt, true)
-		sendToDiscord(txt)
-		textBox.Text = ""
-	end
-end
-
-sendBtn.MouseButton1Click:Connect(handleSend)
-textBox.FocusLost:Connect(function(enterPressed)
-	if enterPressed then
-		handleSend()
-	end
-end)
-
-task.spawn(function()
-	while true do
-		local ok, res = pcall(function()
-			return REQUEST({
-				Url = RELAY_URL .. "/messages",
-				Method = "GET",
-				Headers = {["x-relay-key"]=RELAY_KEY}
-			})
-		end)
-		if ok and res and res.StatusCode == 200 and res.Body then
-			local decoded
-			local good = pcall(function()
-				decoded = HttpService:JSONDecode(res.Body)
-			end)
-			if good and decoded and decoded.ok and type(decoded.messages)=="table" then
-				for _,m in ipairs(decoded.messages) do
-					local msgId = m.id
-					local author = tostring(m.author or "???")
-					local text = tostring(m.text or "")
-					if text ~= "" and (not msgId or msgId > lastId) then
-						addMessage(author, text, false)
-						if type(msgId) == "number" and msgId > lastId then
-							lastId = msgId
-						end
-					end
-				end
-			end
-		end
-		task.wait(1)
-	end
-end)
-
-local EXPANDED_SIZE = UDim2.new(0,360,0,260)
-local COLLAPSED_SIZE = UDim2.new(0,200,0,50)
-local FADE_TIME   = 0.3
-local SHRINK_TIME = 0.3
-
-local function hideGroupVisible()
-	for _,inst in ipairs(uiGroup) do
-		inst.Visible = false
-	end
-end
-
-local function showGroupVisibleAsHidden()
-	for _,inst in ipairs(uiGroup) do
-		inst.Visible = true
-	end
-	applyVisualPhase("hidden")
-end
-
-minBtn.MouseButton1Click:Connect(function()
-	if animing then return end
-	animing = true
-
-	if not minimized then
-		fadeUIGroupToPhase("hidden", FADE_TIME)
-		task.delay(FADE_TIME, function()
-			hideGroupVisible()
-			local sizeTween = tween(frame, SHRINK_TIME, {Size = COLLAPSED_SIZE})
-			sizeTween.Completed:Connect(function()
-				minimized = true
-				minBtn.Text = "+"
-				animing = false
-			end)
-		end)
-	else
-		local sizeTween = tween(frame, SHRINK_TIME, {Size = EXPANDED_SIZE})
-		sizeTween.Completed:Connect(function()
-			showGroupVisibleAsHidden()
-			fadeUIGroupToPhase("shown", FADE_TIME)
-			task.delay(FADE_TIME, function()
-				scrollToBottom()
-				minimized = false
-				minBtn.Text = "–"
-				animing = false
-			end)
-		end)
-	end
-end)
-
-player.OnTeleport:Connect(function()
-	screen:Destroy()
-end)
-
+-- 🎬 Init
 addMessage("System","DXD Relay ready ✅", false)
-addmassage
