@@ -1,19 +1,22 @@
---[[ 🌐 DXD All-in-one v5 (Stable Config Edition)
+--[[ 🌐 DXD All-in-one v5 (with UI Speed Config)
    - Webhook Login/Leave
    - Banlist + Auto Map Loader
    - DXD Chat Relay UI (Minimize + No Echo)
-   - มี CONFIG ปรับได้ทั้งหมด
+   - มี CONFIG ปรับสี ขนาด ความเร็ว แอนิเมชัน
 ]]
 
 -------------------------------------------------
--- 🧩 CONFIG ZONE (แก้ไขได้)
+-- 🧩 CONFIG ZONE
 -------------------------------------------------
 local CONFIG = {
     WEBHOOK = "https://discord.com/api/webhooks/1412800788828258365/yk13Av7fcp8nLLZugFNWNJxY-Td2Bb3K11Jbazrc9JJVcXfmdsRR9i45Ii3s-uqawVo0",
     RELAY_URL = "https://dxd-1.onrender.com",
     RELAY_KEY = "222554",
-    TITLE = "🗨️Chat with global",
-    FRAME_SIZE = Vector2.new(360, 260),      -- ขนาด UI ตอนขยาย
+
+    TITLE = "Chat with ลุงอาร์ม",
+    FRAME_SIZE = Vector2.new(360, 260),
+
+    -- 🌈 Theme
     THEME = {
         BACKGROUND = Color3.fromRGB(25,25,25),
         ACCENT = Color3.fromRGB(255,150,80),
@@ -21,10 +24,23 @@ local CONFIG = {
         OTHER_MSG = Color3.fromRGB(255,180,90),
         SEND_BTN = Color3.fromRGB(60,60,60)
     },
+
     FONT_SIZE = 18,
-    CREDIT_TEXT = "Powered by (Lunarplyr)",
-    CREDIT_COLOR = Color3.fromRGB(120,180,255)
+    CREDIT_TEXT = "Powered by ลุงอาร์ม (Lunarplyr)",
+    CREDIT_COLOR = Color3.fromRGB(120,180,255),
+
+    UI_SPEED = 1   -- ⚡ ความไวของการย่อ–ขยาย UI (วินาที) ปรับได้: 0.1 = เร็วมาก / 0.5 = ช้า
 }
+
+-------------------------------------------------
+-- ฟังก์ชัน Tween (ใช้ CONFIG.UI_SPEED)
+-------------------------------------------------
+local TweenService = game:GetService("TweenService")
+local function tween(obj, props)
+	local tw = TweenService:Create(obj, TweenInfo.new(CONFIG.UI_SPEED, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), props)
+	tw:Play()
+	return tw
+end
 
 -------------------------------------------------
 -- 1. Client Webhook Executor
