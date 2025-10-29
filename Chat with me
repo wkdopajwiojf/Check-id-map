@@ -221,7 +221,7 @@ local credit = Instance.new("TextLabel", frame)
 credit.Size = UDim2.new(1,0,0,16)
 credit.Position = UDim2.new(0,0,1,-16)
 credit.BackgroundTransparency = 1
-credit.Text = "Powered by ลุงอาร์ม (LunarpDiscordredit.Font = Enum.Font.Gotham
+credit.Text = "Powered by ลุงอาร์ม (Lunarplyr)" Discordredit.Font = Enum.Font.Gotham
 credit.TextSize = 13
 credit.TextColor3 = Color3.fromRGB(120,180,255)
 credit.TextXAlignment = Enum.TextXAlignment.Right
