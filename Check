@@ -1,24 +1,43 @@
+--[[ 
+    DXD: Banlist + Map Loader (Auto)
+    รวมเช็คแบน + โหลด script ตาม map
+    @credit: chatgpt
+]]
+
 print("Checking Banlist 🔃")
-for i = 1, 100, math.random(5,15) do
-	task.wait(0.05)
-	print("Loading... " .. i .. "%")
+for i = 1, 100, math.random(5, 15) do
+    task.wait(0.05)
+    print("Loading... " .. i .. "%")
 end
 print("Loading... 100% ✅")
 
-local isBanned = loadstring(game:HttpGet("https://raw.githubusercontent.com/wkdopajwiojf/Zombie-game/main/Ban%20land"))()
-if isBanned then return print("Ban ❌") end
+-- เช็คแบน (โหลดฟังก์ชั่น banlist แล้วเช็ค)
+local isBanned = (function()
+    return loadstring(game:HttpGet("https://raw.githubusercontent.com/wkdopajwiojf/Zombie-game/main/Ban%20land"))()
+end)()
+
+if isBanned then
+    print("Ban ❌")
+    return
+end
+
 print("Success ✅")
 
+-- โหลด script ตามแผนที่
 local mapId = game.PlaceId
+local url
+
 if mapId == 138365924124161 then
-	loadstring(game:HttpGet("https://raw.githubusercontent.com/wkdopajwiojf/Backrooms-Drift/refs/heads/main/Script"))()
+    url = "https://raw.githubusercontent.com/wkdopajwiojf/Backrooms-Drift/refs/heads/main/Script"
 elseif mapId == 14419907512 then
-	loadstring(game:HttpGet("https://raw.githubusercontent.com/wkdopajwiojf/Zombie-game/refs/heads/main/Eng%20version%20%E0%B8%94%E0%B8%B1%E0%B8%94%E0%B9%81%E0%B8%9B%E0%B8%A5%E0%B8%87%20script%20%E0%B8%97%E0%B8%B5%E0%B9%88%E0%B8%99%E0%B8%B5%E0%B9%88"))()
+    url = "https://raw.githubusercontent.com/wkdopajwiojf/Zombie-game/refs/heads/main/Eng%20version%20%E0%B8%94%E0%B8%B1%E0%B8%94%E0%B9%81%E0%B8%9B%E0%B8%A5%E0%B8%87%20script%20%E0%B8%97%E0%B8%B5%E0%B9%88%E0%B8%99%E0%B8%B5%E0%B9%88"
 elseif mapId == 9872472334 then
-	loadstring(game:HttpGet("https://raw.githubusercontent.com/wkdopajwiojf/evade-bypass-countdown/refs/heads/main/Protected_8932730771877973.lua.txt"))()
+    url = "https://raw.githubusercontent.com/wkdopajwiojf/evade-bypass-countdown/refs/heads/main/Protected_8932730771877973.lua.txt"
 elseif mapId == 10449761463 or mapId == 14835828495 or mapId == 17455699549 then
-	loadstring(game:HttpGet("https://raw.githubusercontent.com/wkdopajwiojf/dww/refs/heads/main/i"))()
+    url = "https://raw.githubusercontent.com/wkdopajwiojf/dww/refs/heads/main/i"
 else
-	loadstring(game:HttpGet("https://raw.githubusercontent.com/wkdopajwiojf/Check-id-map/refs/heads/main/Chat%20with%20me"))()
-	return
+    url = "https://raw.githubusercontent.com/wkdopajwiojf/Check-id-map/refs/heads/main/Chat%20with%20me"
 end
+
+-- โหลด script หลัก (map หรือ default)
+loadstring(game:HttpGet(url))()
