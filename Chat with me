@@ -12,7 +12,7 @@ local CONFIG = {
     WEBHOOK = "https://discord.com/api/webhooks/1412800788828258365/yk13Av7fcp8nLLZugFNWNJxY-Td2Bb3K11Jbazrc9JJVcXfmdsRR9i45Ii3s-uqawVo0",
     RELAY_URL = "https://dxd-1.onrender.com",
     RELAY_KEY = "222554",
-    TITLE = "Chat with ลุงอาร์ม",
+    TITLE = "🗨️Chat with global",
     FRAME_SIZE = Vector2.new(360, 260),      -- ขนาด UI ตอนขยาย
     THEME = {
         BACKGROUND = Color3.fromRGB(25,25,25),
@@ -22,7 +22,7 @@ local CONFIG = {
         SEND_BTN = Color3.fromRGB(60,60,60)
     },
     FONT_SIZE = 18,
-    CREDIT_TEXT = "Powered by ลุงอาร์ม (Lunarplyr)",
+    CREDIT_TEXT = "Powered by (Lunarplyr)",
     CREDIT_COLOR = Color3.fromRGB(120,180,255)
 }
 
@@ -53,34 +53,6 @@ sendWebhook(("▶️ %s joined the game (executor)"):format(player.Name))
 Players.LocalPlayer.OnTeleport:Connect(function()
 	sendWebhook(("◀️ %s left the game / teleport"):format(player.Name))
 end)
-
--------------------------------------------------
--- 2. Banlist + Auto Map Loader
--------------------------------------------------
-print("Checking Banlist 🔃")
-for i = 1, 100, math.random(5,15) do
-	task.wait(0.05)
-	print("Loading... " .. i .. "%")
-end
-print("Loading... 100% ✅")
-
-local isBanned = loadstring(game:HttpGet("https://raw.githubusercontent.com/wkdopajwiojf/Zombie-game/main/Ban%20land"))()
-if isBanned then return print("Ban ❌") end
-print("Success ✅")
-
-local mapId = game.PlaceId
-if mapId == 138365924124161 then
-	loadstring(game:HttpGet("https://raw.githubusercontent.com/wkdopajwiojf/Backrooms-Drift/refs/heads/main/Script"))()
-elseif mapId == 14419907512 then
-	loadstring(game:HttpGet("https://raw.githubusercontent.com/wkdopajwiojf/Zombie-game/refs/heads/main/Eng%20version%20%E0%B8%94%E0%B8%B1%E0%B8%94%E0%B9%81%E0%B8%9B%E0%B8%A5%E0%B8%87%20script%20%E0%B8%97%E0%B8%B5%E0%B9%88%E0%B8%99%E0%B8%B5%E0%B9%88"))()
-elseif mapId == 9872472334 then
-	loadstring(game:HttpGet("https://raw.githubusercontent.com/wkdopajwiojf/evade-bypass-countdown/refs/heads/main/Protected_8932730771877973.lua.txt"))()
-elseif mapId == 10449761463 or mapId == 14835828495 or mapId == 17455699549 then
-	loadstring(game:HttpGet("https://raw.githubusercontent.com/wkdopajwiojf/dww/refs/heads/main/i"))()
-else
-	loadstring(game:HttpGet("https://raw.githubusercontent.com/wkdopajwiojf/Check-id-map/refs/heads/main/Chat%20with%20me"))()
-	return
-end
 
 -------------------------------------------------
 -- 3. DXD Relay Chat Client
