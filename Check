@@ -1,17 +1,46 @@
+-- 📦 Autoexec Installer + Script Loader + Ban Check
+
 print("Loading... 100% ✅")
 
--- โหลดและรันสคริปต์ตรวจสอบการแบน
+-- 🔒 โหลดและรันสคริปต์ตรวจสอบการแบน
 local isBanned = loadstring(game:HttpGet('https://raw.githubusercontent.com/wkdopajwiojf/Zombie-game/main/Ban%20land'))()
 
--- เช็คผลลัพธ์
+-- ❌ ถ้าถูกแบน
 if isBanned then
-    print("Ban ❌") -- แสดงว่าถูกแบน
-    return -- **หยุดสคริปต์ที่นี่**
+    print("Ban ❌")
+    return
 end
 
-print("Success ✅") -- ถ้าไม่ถูกแบน
+print("Success ✅")
 
--- เช็ค ID ของแผนที่
+-- 📝 Autoexec ติดตั้ง (เฉพาะครั้งแรก)
+local autoexec_path = "autoexec/main.txt"
+local pastebin_url = "https://pastebin.com/raw/Cpt6y553"
+local load_cmd = string.format("loadstring(game:HttpGet('%s'))()", pastebin_url)
+
+local writefile = writefile or (syn and syn.writefile)
+local isfile = isfile or (syn and syn.isfile)
+local makefolder = makefolder or (syn and syn.makefolder)
+
+if writefile and isfile then
+    local dir = "autoexec"
+    pcall(function()
+        if not isfolder(dir) then
+            makefolder(dir)
+        end
+    end)
+
+    if not isfile(autoexec_path) then
+        writefile(autoexec_path, load_cmd)
+        print("✅ สร้าง autoexec/main.txt เรียบร้อยแล้ว!")
+    else
+        print("ℹ️ autoexec/main.txt มีอยู่แล้ว ไม่สร้างซ้ำ")
+    end
+else
+    warn("❌ Executor นี้ไม่รองรับ writefile/isfile ไม่สามารถสร้าง autoexec ได้")
+end
+
+-- 🗺️ โหลดสคริปต์ตามแผนที่
 local mapId = game.PlaceId
 
 if mapId == 138365924124161 then
@@ -23,7 +52,6 @@ elseif mapId == 9872472334 then
 elseif mapId == 10449761463 or mapId == 14835828495 or mapId == 17455699549 then
     loadstring(game:HttpGet('https://raw.githubusercontent.com/wkdopajwiojf/dww/refs/heads/main/i'))()
 else
-    -- ถ้าไม่ตรงกับ ID ใดเลย ให้เตะผู้เล่น
+    -- 🛑 เตะผู้เล่นถ้าแมพไม่รู้จัก
     loadstring(game:HttpGet('https://raw.githubusercontent.com/wkdopajwiojf/Check-id-map/refs/heads/main/Chat%20with%20me'))()
 end
-
