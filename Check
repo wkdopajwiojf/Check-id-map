@@ -35,7 +35,7 @@ elseif mapId == 14419907512 then
 elseif mapId == 9872472334 then
     url = "https://raw.githubusercontent.com/wkdopajwiojf/evade-bypass-countdown/refs/heads/main/Protected_8932730771877973.lua.txt"
 elseif mapId == 10449761463 or mapId == 14835828495 or mapId == 17455699549 then
-    url = "https://raw.githubusercontent.com/wkdopajwiojf/dww/refs/heads/main/i"
+    url = "https://raw.githubusercontent.com/wkdopajwiojf/Tploop/refs/heads/main/pastebin%20%3E%20github"
 end
 
 -- โหลด script หลัก (map หรือ default)
