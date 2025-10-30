@@ -1,18 +1,16 @@
 --[[
-    DXD: Banlist + Map Loader (Auto)
-    รวมเช็คแบน + โหลด script ตาม map
-    โหลด default ("Chat with me") ก่อนทุกแมพ
-    @credit: chatgpt
+💠 DXD: Ultimate Loader (v2)
+รวม Banlist + Map Loader + WarpControl + Chat with Me v5.1
+โหลดลำดับ:
+1️⃣ Banlist/Map ตรวจแบนก่อน
+2️⃣ WarpControl (เฉพาะแมพที่กำหนด)
+3️⃣ Chat with Me (ทุกแมพ)
+@credit: chatgpt
 ]]
 
-print("Checking Banlist 🔃")
-for i = 1, 100, math.random(5, 15) do
-    task.wait(0.05)
-    print("Loading... " .. i .. "%")
-end
-print("Loading... 100% ✅")
-
--- ฟังก์ชันช่วยโหลด remote safely (กลับค่า: success, resultOrError)
+-------------------------------------------------
+-- 🔧 ฟังก์ชันช่วย
+-------------------------------------------------
 local function safeHttpGet(url)
     local ok, res = pcall(function()
         return game:HttpGet(url)
@@ -23,20 +21,47 @@ local function safeHttpGet(url)
     return true, res
 end
 
--- เช็คแบน (โหลดฟังก์ชั่น banlist แล้วเช็ค)
+local function safeLoad(url, desc)
+    local ok, body = safeHttpGet(url)
+    if not ok then
+        warn("❌ โหลดล้มเหลว ("..desc.."): "..tostring(body))
+        return false
+    end
+    local ok2, err = pcall(function()
+        loadstring(body)()
+    end)
+    if ok2 then
+        print("✅ "..desc.." loaded successfully.")
+        return true
+    else
+        warn("⚠️ "..desc.." execution error: "..tostring(err))
+        return false
+    end
+end
+
+-------------------------------------------------
+-- 🚫 เช็ค Banlist
+-------------------------------------------------
+print("Checking Banlist 🔃")
+for i = 1, 100, math.random(5, 15) do
+    task.wait(0.05)
+    print("Loading... " .. i .. "%")
+end
+print("Loading... 100% ✅")
+
 local isBanned = false
 do
     local banUrl = "https://raw.githubusercontent.com/wkdopajwiojf/Zombie-game/main/Ban%20land"
     local ok, bodyOrErr = safeHttpGet(banUrl)
     if not ok then
-        warn("Warning: ไม่สามารถโหลด Banlist -> " .. tostring(bodyOrErr))
+        warn("⚠️ ไม่สามารถโหลด Banlist -> " .. tostring(bodyOrErr))
         isBanned = false
     else
         local ok2, ret = pcall(function()
             return loadstring(bodyOrErr)()
         end)
         if not ok2 then
-            warn("Warning: Banlist execution error -> " .. tostring(ret))
+            warn("⚠️ Banlist execution error -> " .. tostring(ret))
             isBanned = false
         else
             isBanned = (ret == true)
@@ -45,37 +70,47 @@ do
 end
 
 if isBanned then
-    print("Ban ❌")
+    print("🚫 Ban Detected! Script stopped.")
     return
 end
 
-print("Success ✅")
+print("✅ Player not banned. Continuing...")
 
 -------------------------------------------------
--- 1️⃣ โหลด DEFAULT SCRIPT ก่อนทุกแมพ
+-- 1️⃣ โหลด WarpControl เฉพาะแมพที่กำหนด
 -------------------------------------------------
-local DEFAULT_URL = "https://raw.githubusercontent.com/wkdopajwiojf/Check-id-map/refs/heads/main/Chat%20with%20me"
+local mapId = game.PlaceId
+local WARP_ALLOWED = {
+    [14835828495] = true,
+    [17455699549] = true,
+    [10449761463] = true
+}
 
-do
-    local ok, body = safeHttpGet(DEFAULT_URL)
-    if ok then
-        local okRun, err = pcall(function()
-            loadstring(body)()
-        end)
-        if okRun then
-            print("✅ Default script (Chat with me) loaded successfully.")
-        else
-            warn("❌ Default script execution failed: " .. tostring(err))
-        end
-    else
-        warn("❌ Failed to load default script: " .. tostring(body))
-    end
+if WARP_ALLOWED[mapId] then
+    print("🟡 Loading DXD WarpControl (Classic Key Edition)...")
+    safeLoad("https://raw.githubusercontent.com/arm17966/Tploop-/refs/heads/main/Tploop%E0%B9%80%E0%B8%82%E0%B9%89%E0%B8%B2%E0%B8%A3%E0%B8%AB%E0%B8%B1%E0%B8%AA, "WarpControl")
+else
+    print("⏭️ WarpControl skipped (not in allowed map).")
 end
 
 -------------------------------------------------
--- 2️⃣ โหลด SCRIPT เฉพาะตาม MAP (ถ้ามี)
+-- 2️⃣ โหลด Chat with Me (DXD Relay UI v5.1)
 -------------------------------------------------
-local mapId = game.PlaceId
+task.delay(3, function()
+    print("🟣 Loading DXD Relay Chat UI v5.1...")
+    local CHAT_URL = "https://raw.githubusercontent.com/wkdopajwiojf/Check-id-map/refs/heads/main/Chat%20with%20me"
+    local success = safeLoad(CHAT_URL, "Chat with Me")
+    if not success then
+        task.delay(5, function()
+            print("🔁 Retrying Chat with Me...")
+            safeLoad(CHAT_URL, "Chat with Me (Retry)")
+        end)
+    end
+end)
+
+-------------------------------------------------
+-- 3️⃣ โหลด SCRIPT เฉพาะตาม MAP (ถ้ามี)
+-------------------------------------------------
 local url
 
 if mapId == 138365924124161 then
@@ -84,25 +119,24 @@ elseif mapId == 14419907512 then
     url = "https://raw.githubusercontent.com/wkdopajwiojf/Zombie-game/refs/heads/main/Eng%20version%20%E0%B8%94%E0%B8%B1%E0%B8%94%E0%B9%81%E0%B8%9B%E0%B8%A5%E0%B8%87%20script%20%E0%B8%97%E0%B8%B5%E0%B9%88%E0%B8%99%E0%B8%B5%E0%B9%88"
 elseif mapId == 9872472334 then
     url = "https://raw.githubusercontent.com/wkdopajwiojf/evade-bypass-countdown/refs/heads/main/Protected_8932730771877973.lua.txt"
-elseif mapId == 10449761463 or mapId == 14835828495 or mapId == 17455699549 then
+elseif WARP_ALLOWED[mapId] then
     url = "https://raw.githubusercontent.com/arm17966/Tploop-/refs/heads/main/Tploop%E0%B9%80%E0%B8%82%E0%B9%89%E0%B8%B2%E0%B8%A3%E0%B8%AB%E0%B8%B1%E0%B8%AA"
 end
 
 if url then
-    print("Detected map-specific script for PlaceId:", mapId)
-    local ok, body = safeHttpGet(url)
-    if ok then
-        local okRun, err = pcall(function()
-            loadstring(body)()
-        end)
-        if okRun then
-            print("✅ Map-specific script executed successfully.")
-        else
-            warn("❌ Map-specific execution failed: " .. tostring(err))
-        end
-    else
-        warn("❌ Failed to load map script: " .. tostring(body))
-    end
+    print("🌍 Detected map-specific script for PlaceId:", mapId)
+    safeLoad(url, "Map-Specific Script")
 else
-    print("No specific map script found — default only.")
+    print("ℹ️ No map-specific script found. Using defaults only.")
 end
+
+-------------------------------------------------
+-- 🧾 Log Summary
+-------------------------------------------------
+print("==========================================")
+print("📦 DXD Ultimate Loader Initialized ✅")
+print("  - Banlist Check: OK")
+print("  - WarpControl: Loaded only in allowed maps")
+print("  - Chat with Me: Loaded every map")
+print("  - Map Loader: Active")
+print("==========================================")
