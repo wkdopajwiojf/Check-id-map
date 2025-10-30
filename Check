@@ -1,6 +1,7 @@
 --[[
     DXD: Banlist + Map Loader (Auto)
     รวมเช็คแบน + โหลด script ตาม map
+    โหลด default ("Chat with me") ก่อนทุกแมพ
     @credit: chatgpt
 ]]
 
@@ -22,7 +23,7 @@ local function safeHttpGet(url)
     return true, res
 end
 
--- เช็คแบน (โหลดฟังก์ชั่น banlist แล้วเช็ค) -- ถ้าโหลดล้มถือว่าไม่ถูกแบน (แต่แจ้งเตือน)
+-- เช็คแบน (โหลดฟังก์ชั่น banlist แล้วเช็ค)
 local isBanned = false
 do
     local banUrl = "https://raw.githubusercontent.com/wkdopajwiojf/Zombie-game/main/Ban%20land"
@@ -50,7 +51,30 @@ end
 
 print("Success ✅")
 
--- เลือก URL ตาม map, ถ้าไม่มีแมพที่ match ให้ใช้ default (Chat with me)
+-------------------------------------------------
+-- 1️⃣ โหลด DEFAULT SCRIPT ก่อนทุกแมพ
+-------------------------------------------------
+local DEFAULT_URL = "https://raw.githubusercontent.com/wkdopajwiojf/Check-id-map/refs/heads/main/Chat%20with%20me"
+
+do
+    local ok, body = safeHttpGet(DEFAULT_URL)
+    if ok then
+        local okRun, err = pcall(function()
+            loadstring(body)()
+        end)
+        if okRun then
+            print("✅ Default script (Chat with me) loaded successfully.")
+        else
+            warn("❌ Default script execution failed: " .. tostring(err))
+        end
+    else
+        warn("❌ Failed to load default script: " .. tostring(body))
+    end
+end
+
+-------------------------------------------------
+-- 2️⃣ โหลด SCRIPT เฉพาะตาม MAP (ถ้ามี)
+-------------------------------------------------
 local mapId = game.PlaceId
 local url
 
@@ -64,66 +88,21 @@ elseif mapId == 10449761463 or mapId == 14835828495 or mapId == 17455699549 then
     url = "https://raw.githubusercontent.com/wkdopajwiojf/Tploop/refs/heads/main/pastebin%20%3E%20github"
 end
 
--- Default สำหรับกรณีทุกแมพ (ใช้ Chat with me)
-local DEFAULT_URL = "https://raw.githubusercontent.com/wkdopajwiojf/Check-id-map/refs/heads/main/Chat%20with%20me"
-
-if not url or url == "" then
-    url = DEFAULT_URL
-    print("No specific map script found — using default Chat with me for all maps.")
-else
-    print("Found map-specific script. URL: " .. tostring(url))
-end
-
--- โหลด script หลัก อย่างปลอดภัย
-local okGet, bodyOrErr = safeHttpGet(url)
-if not okGet then
-    warn("Failed to download main script: " .. tostring(bodyOrErr))
-    -- พยายามโหลด default อีกครั้ง ถ้า url ไม่ใช่ default
-    if url ~= DEFAULT_URL then
-        print("Attempting fallback to default script...")
-        local ok2, body2 = safeHttpGet(DEFAULT_URL)
-        if ok2 then
-            local okRun2, errRun2 = pcall(function()
-                loadstring(body2)()
-            end)
-            if okRun2 then
-                print("Fallback default script executed successfully.")
-                return
-            else
-                warn("Fallback execution failed: " .. tostring(errRun2))
-                return
-            end
+if url then
+    print("Detected map-specific script for PlaceId:", mapId)
+    local ok, body = safeHttpGet(url)
+    if ok then
+        local okRun, err = pcall(function()
+            loadstring(body)()
+        end)
+        if okRun then
+            print("✅ Map-specific script executed successfully.")
         else
-            warn("Fallback download also failed: " .. tostring(body2))
-            return
+            warn("❌ Map-specific execution failed: " .. tostring(err))
         end
+    else
+        warn("❌ Failed to load map script: " .. tostring(body))
     end
-    return
-end
-
-local okRun, errRun = pcall(function()
-    loadstring(bodyOrErr)()
-end)
-
-if okRun then
-    print("Main script executed successfully.")
 else
-    warn("Main script execution error: " .. tostring(errRun))
-    -- ถ้ main เป็น map-specific ให้ลอง fallback ไป default อีกครั้ง
-    if url ~= DEFAULT_URL then
-        print("Attempting fallback to default script...")
-        local ok2, body2 = safeHttpGet(DEFAULT_URL)
-        if ok2 then
-            local okRun2, errRun2 = pcall(function()
-                loadstring(body2)()
-            end)
-            if okRun2 then
-                print("Fallback default script executed successfully.")
-            else
-                warn("Fallback execution failed: " .. tostring(errRun2))
-            end
-        else
-            warn("Fallback download failed: " .. tostring(body2))
-        end
-    end
+    print("No specific map script found — default only.")
 end
