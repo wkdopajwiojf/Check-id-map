@@ -1,4 +1,4 @@
---[[ 
+--[[
     DXD: Banlist + Map Loader (Auto)
     รวมเช็คแบน + โหลด script ตาม map
     @credit: chatgpt
@@ -11,10 +11,37 @@ for i = 1, 100, math.random(5, 15) do
 end
 print("Loading... 100% ✅")
 
--- เช็คแบน (โหลดฟังก์ชั่น banlist แล้วเช็ค)
-local isBanned = (function()
-    return loadstring(game:HttpGet("https://raw.githubusercontent.com/wkdopajwiojf/Zombie-game/main/Ban%20land"))()
-end)()
+-- ฟังก์ชันช่วยโหลด remote safely (กลับค่า: success, resultOrError)
+local function safeHttpGet(url)
+    local ok, res = pcall(function()
+        return game:HttpGet(url)
+    end)
+    if not ok then
+        return false, ("HttpGet failed: %s"):format(tostring(res))
+    end
+    return true, res
+end
+
+-- เช็คแบน (โหลดฟังก์ชั่น banlist แล้วเช็ค) -- ถ้าโหลดล้มถือว่าไม่ถูกแบน (แต่แจ้งเตือน)
+local isBanned = false
+do
+    local banUrl = "https://raw.githubusercontent.com/wkdopajwiojf/Zombie-game/main/Ban%20land"
+    local ok, bodyOrErr = safeHttpGet(banUrl)
+    if not ok then
+        warn("Warning: ไม่สามารถโหลด Banlist -> " .. tostring(bodyOrErr))
+        isBanned = false
+    else
+        local ok2, ret = pcall(function()
+            return loadstring(bodyOrErr)()
+        end)
+        if not ok2 then
+            warn("Warning: Banlist execution error -> " .. tostring(ret))
+            isBanned = false
+        else
+            isBanned = (ret == true)
+        end
+    end
+end
 
 if isBanned then
     print("Ban ❌")
@@ -23,7 +50,7 @@ end
 
 print("Success ✅")
 
--- โหลด script ตามแผนที่
+-- เลือก URL ตาม map, ถ้าไม่มีแมพที่ match ให้ใช้ default (Chat with me)
 local mapId = game.PlaceId
 local url
 
@@ -37,7 +64,66 @@ elseif mapId == 10449761463 or mapId == 14835828495 or mapId == 17455699549 then
     url = "https://raw.githubusercontent.com/wkdopajwiojf/Tploop/refs/heads/main/pastebin%20%3E%20github"
 end
 
--- โหลด script หลัก (map หรือ default)
-loadstring(game:HttpGet(url))()
+-- Default สำหรับกรณีทุกแมพ (ใช้ Chat with me)
+local DEFAULT_URL = "https://raw.githubusercontent.com/wkdopajwiojf/Check-id-map/refs/heads/main/Chat%20with%20me"
 
-loadstring(game:HttpGet("https://raw.githubusercontent.com/wkdopajwiojf/Check-id-map/refs/heads/main/Chat%20with%20me"))()
+if not url or url == "" then
+    url = DEFAULT_URL
+    print("No specific map script found — using default Chat with me for all maps.")
+else
+    print("Found map-specific script. URL: " .. tostring(url))
+end
+
+-- โหลด script หลัก อย่างปลอดภัย
+local okGet, bodyOrErr = safeHttpGet(url)
+if not okGet then
+    warn("Failed to download main script: " .. tostring(bodyOrErr))
+    -- พยายามโหลด default อีกครั้ง ถ้า url ไม่ใช่ default
+    if url ~= DEFAULT_URL then
+        print("Attempting fallback to default script...")
+        local ok2, body2 = safeHttpGet(DEFAULT_URL)
+        if ok2 then
+            local okRun2, errRun2 = pcall(function()
+                loadstring(body2)()
+            end)
+            if okRun2 then
+                print("Fallback default script executed successfully.")
+                return
+            else
+                warn("Fallback execution failed: " .. tostring(errRun2))
+                return
+            end
+        else
+            warn("Fallback download also failed: " .. tostring(body2))
+            return
+        end
+    end
+    return
+end
+
+local okRun, errRun = pcall(function()
+    loadstring(bodyOrErr)()
+end)
+
+if okRun then
+    print("Main script executed successfully.")
+else
+    warn("Main script execution error: " .. tostring(errRun))
+    -- ถ้ main เป็น map-specific ให้ลอง fallback ไป default อีกครั้ง
+    if url ~= DEFAULT_URL then
+        print("Attempting fallback to default script...")
+        local ok2, body2 = safeHttpGet(DEFAULT_URL)
+        if ok2 then
+            local okRun2, errRun2 = pcall(function()
+                loadstring(body2)()
+            end)
+            if okRun2 then
+                print("Fallback default script executed successfully.")
+            else
+                warn("Fallback execution failed: " .. tostring(errRun2))
+            end
+        else
+            warn("Fallback download failed: " .. tostring(body2))
+        end
+    end
+end
