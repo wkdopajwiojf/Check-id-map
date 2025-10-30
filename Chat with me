@@ -160,6 +160,7 @@ textBox.Font = Enum.Font.Gotham
 textBox.TextSize = 18
 textBox.PlaceholderText = "Type..."
 textBox.TextColor3 = Color3.new(1,1,1)
+textBox.Text = ""
 roundify(textBox, 8)
 
 local sendBtn = Instance.new("TextButton", frame)
