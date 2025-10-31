@@ -96,18 +96,23 @@ end
 -------------------------------------------------
 -- 2️⃣ โหลด Chat with Me (DXD Relay UI v5.1)
 -------------------------------------------------
-task.delay(3, function()
-    print("🟣 Loading DXD Relay Chat UI v5.1...")
+task.delay(8, function() -- หน่วง 8 วิ หลัง WarpControl รันเสร็จแน่ๆ
     local CHAT_URL = "https://raw.githubusercontent.com/wkdopajwiojf/Check-id-map/refs/heads/main/Chat%20with%20me"
-    local success = safeLoad(CHAT_URL, "Chat with Me")
-    if not success then
-        task.delay(5, function()
-            print("🔁 Retrying Chat with Me...")
-            safeLoad(CHAT_URL, "Chat with Me (Retry)")
+    print("💬 Loading Chat with Me UI (after WarpControl ready)...")
+    local ok, res = pcall(function() return game:HttpGet(CHAT_URL) end)
+    if ok then
+        local ok2, err = pcall(function()
+            loadstring(res)()
         end)
+        if ok2 then
+            print("✅ Chat UI loaded successfully after WarpControl.")
+        else
+            warn("❌ Chat UI failed: "..tostring(err))
+        end
+    else
+        warn("❌ Chat UI download failed: "..tostring(res))
     end
 end)
-
 -------------------------------------------------
 -- 3️⃣ โหลด SCRIPT เฉพาะตาม MAP (ถ้ามี)
 -------------------------------------------------
