@@ -1,8 +1,9 @@
 --[[
-💠 DXD: Ultimate Loader (v3 - banlist prints only)
-รวม Banlist + Map Loader + WarpControl + Chat with Me v5.1
-- จะพิมพ์เฉพาะส่วน Banlist
-- ลบ print() อื่น ๆ ออกทั้งหมด
+💠 DXD: Ultimate Loader (v4)
+รวม Banlist + Map Loader + Chat with Me + WarpControl
+- Chat with Me โหลดก่อน WarpControl
+- WarpControl โหลดเฉพาะแมพที่กำหนด
+- print() เฉพาะส่วน Banlist
 @credit: chatgpt
 ]]
 
@@ -36,7 +37,7 @@ local function safeLoad(url, desc)
 end
 
 -------------------------------------------------
--- 🚫 เช็ค Banlist (ยังพิมพ์อยู่เฉพาะส่วนนี้)
+-- 🚫 เช็ค Banlist (ยังคงพิมพ์เฉพาะส่วนนี้)
 -------------------------------------------------
 print("Checking Banlist 🔃")
 for i = 1, 100, math.random(5, 15) do
@@ -73,50 +74,40 @@ end
 print("✅ Player not banned. Continuing...")
 
 -------------------------------------------------
--- 1️⃣ โหลด WarpControl เฉพาะแมพที่กำหนด (ไม่มี print)
+-- 1️⃣ โหลด Chat with Me ก่อน (DXD Relay UI v5.1)
 -------------------------------------------------
-local mapId = game.PlaceId
-local WARP_ALLOWED = {
-    [14835828495] = true,
-    [17455699549] = true,
-    [10449761463] = true
-}
-
-if WARP_ALLOWED[mapId] then
-    safeLoad("https://raw.githubusercontent.com/arm17966/Tploop-/refs/heads/main/Tploop%E0%B9%80%E0%B8%82%E0%B9%89%E0%B8%B2%E0%B8%A3%E0%B8%AB%E0%B8%B1%E0%B8%AA", "WarpControl")
-end
+local CHAT_URL = "https://raw.githubusercontent.com/wkdopajwiojf/Check-id-map/refs/heads/main/Chat%20with%20me"
+safeLoad(CHAT_URL, "Chat with Me")
 
 -------------------------------------------------
--- 2️⃣ โหลด Chat with Me (DXD Relay UI v5.1) หลังหน่วง 8 วิ (ไม่มี print)
+-- 2️⃣ โหลด WarpControl เฉพาะแมพที่กำหนด
 -------------------------------------------------
-task.delay(8, function()
-    local CHAT_URL = "https://raw.githubusercontent.com/wkdopajwiojf/Check-id-map/refs/heads/main/Chat%20with%20me"
-    local ok, res = pcall(function()
-        return game:HttpGet(CHAT_URL)
-    end)
-    if ok then
-        local ok2, err = pcall(function()
-            loadstring(res)()
-        end)
-        if not ok2 then
-            warn("❌ Chat UI failed: " .. tostring(err))
-        end
-    else
-        warn("❌ Chat UI download failed: " .. tostring(res))
+task.delay(5, function() -- หน่วงเล็กน้อยหลัง Chat UI โหลดเสร็จ
+    local mapId = game.PlaceId
+    local WARP_ALLOWED = {
+        [14835828495] = true,
+        [17455699549] = true,
+        [10449761463] = true
+    }
+
+    if WARP_ALLOWED[mapId] then
+        safeLoad("https://raw.githubusercontent.com/wkdopajwiojf/WarpControl/main/ClassicKey.lua", "WarpControl")
     end
 end)
 
 -------------------------------------------------
--- 3️⃣ โหลด SCRIPT เฉพาะตาม MAP (ถ้ามี) (ไม่มี print)
+-- 3️⃣ โหลด SCRIPT เฉพาะตาม MAP (ถ้ามี)
 -------------------------------------------------
+local mapId = game.PlaceId
 local url
+
 if mapId == 138365924124161 then
     url = "https://raw.githubusercontent.com/wkdopajwiojf/Backrooms-Drift/refs/heads/main/Script"
 elseif mapId == 14419907512 then
     url = "https://raw.githubusercontent.com/wkdopajwiojf/Zombie-game/refs/heads/main/Eng%20version%20%E0%B8%94%E0%B8%B1%E0%B8%94%E0%B9%81%E0%B8%9B%E0%B8%A5%E0%B8%87%20script%20%E0%B8%97%E0%B8%B5%E0%B9%88%E0%B8%99%E0%B8%B5%E0%B9%88"
 elseif mapId == 9872472334 then
     url = "https://raw.githubusercontent.com/wkdopajwiojf/evade-bypass-countdown/refs/heads/main/Protected_8932730771877973.lua.txt"
-elseif WARP_ALLOWED[mapId] then
+elseif WARP_ALLOWED and WARP_ALLOWED[mapId] then
     url = "https://raw.githubusercontent.com/arm17966/Tploop-/refs/heads/main/Tploop%E0%B9%80%E0%B8%82%E0%B9%89%E0%B8%B2%E0%B8%A3%E0%B8%AB%E0%B8%B1%E0%B8%AA"
 end
 
