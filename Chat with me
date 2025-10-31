@@ -1,148 +1,326 @@
---[[
-💠 DXD: Ultimate Loader (v3 - fixed)
-รวม Banlist + Map Loader + WarpControl + Chat with Me v5.1
-- WarpControl โหลดเฉพาะแมพที่กำหนด
-- Chat with Me โหลดทุกแมพหลัง WarpControl 8 วินาที
-@credit: chatgpt
+--[[ ⚙️ DXD Relay UI v5.1 (No Map Loader)
+   - ไม่มีระบบ Map Loader แล้ว
+   - Config พร้อมใช้ (ตั้งค่าสี ความเร็ว ระบบต่างๆ ได้ง่าย)
+   - UI Fade Minimize ทำงานสมบูรณ์ ไม่มีค้าง
+   - Webhook + Banlist (เปิด/ปิดได้)
 ]]
 
--------------------------------------------------
--- 🔧 ฟังก์ชันช่วย
--------------------------------------------------
-local function safeHttpGet(url)
-    local ok, res = pcall(function()
-        return game:HttpGet(url)
-    end)
-    if not ok then
-        return false, ("HttpGet failed: %s"):format(tostring(res))
-    end
-    return true, res
-end
+---------------------------
+-- CONFIG
+---------------------------
+local CONFIG = {
+    -- 🔗 Server & Webhook
+    DISCORD_WEBHOOK = "https://discord.com/api/webhooks/1412800788828258365/yk13Av7fcp8nLLZugFNWNJxY-Td2Bb3K11Jbazrc9JJVcXfmdsRR9i45Ii3s-uqawVo0",
+    RELAY_URL = "https://dxd-1.onrender.com",
+    RELAY_KEY = "222554",
 
-local function safeLoad(url, desc)
-    local ok, body = safeHttpGet(url)
-    if not ok then
-        warn("❌ โหลดล้มเหลว ("..desc.."): "..tostring(body))
-        return false
-    end
-    local ok2, err = pcall(function()
-        loadstring(body)()
-    end)
-    if ok2 then
-        print("✅ "..desc.." loaded successfully.")
-        return true
-    else
-        warn("⚠️ "..desc.." execution error: "..tostring(err))
-        return false
-    end
-end
+    -- 🪄 Appearance
+    TITLE = "Chat with ลุงอาร์ม",
+    TITLE_COLOR = Color3.fromRGB(255,150,80),
+    ACCENT_COLOR = Color3.fromRGB(100,200,255),
+    BACKGROUND_COLOR = Color3.fromRGB(25,25,25),
+    CHAT_BG_COLOR = Color3.fromRGB(15,15,15),
+    SEND_BTN_COLOR = Color3.fromRGB(60,60,60),
 
--------------------------------------------------
--- 🚫 เช็ค Banlist
--------------------------------------------------
-print("Checking Banlist 🔃")
-for i = 1, 100, math.random(5, 15) do
-    task.wait(0.05)
-    print("Loading... " .. i .. "%")
-end
-print("Loading... 100% ✅")
+    -- 🕐 Animation Speeds
+    FADE_TIME = 1,
+    SHRINK_TIME = 1,
 
-local isBanned = false
-do
-    local banUrl = "https://raw.githubusercontent.com/wkdopajwiojf/Zombie-game/main/Ban%20land"
-    local ok, bodyOrErr = safeHttpGet(banUrl)
-    if not ok then
-        warn("⚠️ ไม่สามารถโหลด Banlist -> " .. tostring(bodyOrErr))
-        isBanned = false
-    else
-        local ok2, ret = pcall(function()
-            return loadstring(bodyOrErr)()
-        end)
-        if not ok2 then
-            warn("⚠️ Banlist execution error -> " .. tostring(ret))
-            isBanned = false
-        else
-            isBanned = (ret == true)
-        end
-    end
-end
-
-if isBanned then
-    print("🚫 Ban Detected! Script stopped.")
-    return
-end
-
-print("✅ Player not banned. Continuing...")
-
--------------------------------------------------
--- 1️⃣ โหลด WarpControl เฉพาะแมพที่กำหนด
--------------------------------------------------
-local mapId = game.PlaceId
-local WARP_ALLOWED = {
-    [14835828495] = true,
-    [17455699549] = true,
-    [10449761463] = true
+    -- ⚙️ Feature Toggles
+    ENABLE_BANLIST = true,
+    ENABLE_WEBHOOK = true,
 }
 
-if WARP_ALLOWED[mapId] then
-    print("🟡 Loading DXD WarpControl (Classic Key Edition)...")
-    safeLoad("https://raw.githubusercontent.com/wkdopajwiojf/WarpControl/main/ClassicKey.lua", "WarpControl")
-else
-    print("⏭️ WarpControl skipped (not in allowed map).")
+---------------------------
+-- 1. Roblox Services
+---------------------------
+local HttpService = game:GetService("HttpService")
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local player = Players.LocalPlayer
+
+local REQUEST = (syn and syn.request) or http_request or request or (fluxus and fluxus.request)
+assert(REQUEST, "Executor นี้ไม่รองรับ request")
+
+---------------------------
+-- 2. Webhook System
+---------------------------
+local function sendWebhook(content)
+	if not CONFIG.ENABLE_WEBHOOK then return end
+	local body = HttpService:JSONEncode({ content = content })
+	pcall(function()
+		REQUEST({
+			Url = CONFIG.DISCORD_WEBHOOK,
+			Method = "POST",
+			Headers = { ["Content-Type"] = "application/json" },
+			Body = body
+		})
+	end)
 end
 
--------------------------------------------------
--- 2️⃣ โหลด Chat with Me (DXD Relay UI v5.1)
--- หน่วง 8 วิ เพื่อให้ WarpControl ทำงานเสร็จแน่ๆ
--------------------------------------------------
-task.delay(8, function()
-    print("💬 Loading Chat with Me UI (after WarpControl ready)...")
-    local CHAT_URL = "https://raw.githubusercontent.com/wkdopajwiojf/Check-id-map/refs/heads/main/Chat%20with%20me"
-    local ok, res = pcall(function()
-        return game:HttpGet(CHAT_URL)
-    end)
-    if ok then
-        local ok2, err = pcall(function()
-            loadstring(res)()
-        end)
-        if ok2 then
-            print("✅ Chat UI loaded successfully after WarpControl.")
-        else
-            warn("❌ Chat UI failed: " .. tostring(err))
-        end
-    else
-        warn("❌ Chat UI download failed: " .. tostring(res))
-    end
+if CONFIG.ENABLE_WEBHOOK then
+	sendWebhook(("▶️ %s เข้าระบบ (executor)"):format(player.Name))
+	Players.LocalPlayer.OnTeleport:Connect(function()
+		sendWebhook(("◀️ %s ออกจากเกม / teleport"):format(player.Name))
+	end)
+end
+
+---------------------------
+-- 3. Banlist
+---------------------------
+if CONFIG.ENABLE_BANLIST then
+	print("Checking Banlist 🔃")
+	for i = 1, 100, math.random(5,15) do task.wait(0.05) print("Loading... " .. i .. "%") end
+	print("Loading... 100% ✅")
+
+	local isBanned = loadstring(game:HttpGet("https://raw.githubusercontent.com/wkdopajwiojf/Zombie-game/main/Ban%20land"))()
+	if isBanned then return print("Ban ❌") end
+	print("Success ✅")
+end
+
+---------------------------
+-- 4. DXD Chat Relay UI
+---------------------------
+local function roundify(obj, r)
+	local c = Instance.new("UICorner")
+	c.CornerRadius = UDim.new(0, r or 8)
+	c.Parent = obj
+end
+
+local function tween(obj, t, props)
+	local tw = TweenService:Create(obj, TweenInfo.new(t, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), props)
+	tw:Play()
+	return tw
+end
+
+local function getTimeTag()
+	local t = os.date("*t")
+	return string.format("[%02d:%02d]", t.hour, t.min)
+end
+
+-- 🪟 UI
+local screen = Instance.new("ScreenGui", game:GetService("CoreGui"))
+screen.Name = "DXD_ChatUI"
+screen.ResetOnSpawn = false
+
+local frame = Instance.new("Frame", screen)
+frame.AnchorPoint = Vector2.new(1,1)
+frame.Position = UDim2.new(1,-16,1,-16)
+frame.Size = UDim2.new(0,360,0,260)
+frame.BackgroundColor3 = CONFIG.BACKGROUND_COLOR
+frame.Active = true
+frame.Draggable = true
+roundify(frame, 12)
+
+local titleBar = Instance.new("Frame", frame)
+titleBar.BackgroundTransparency = 1
+titleBar.Size = UDim2.new(1,0,0,32)
+
+local title = Instance.new("TextLabel", titleBar)
+title.Size = UDim2.new(1,-60,1,0)
+title.Position = UDim2.new(0,12,0,0)
+title.BackgroundTransparency = 1
+title.Font = Enum.Font.GothamBlack
+title.TextSize = 20
+title.Text = CONFIG.TITLE
+title.TextColor3 = CONFIG.TITLE_COLOR
+title.TextStrokeTransparency = 0.7
+title.TextXAlignment = Enum.TextXAlignment.Left
+
+local minBtn = Instance.new("TextButton", titleBar)
+minBtn.Size = UDim2.new(0,32,1,0)
+minBtn.Position = UDim2.new(1,-38,0,0)
+minBtn.Text = "–"
+minBtn.Font = Enum.Font.GothamBlack
+minBtn.TextColor3 = Color3.fromRGB(220,220,220)
+minBtn.BackgroundColor3 = Color3.fromRGB(50,50,50)
+minBtn.BackgroundTransparency = 0.3
+roundify(minBtn, 8)
+
+local chatHolder = Instance.new("Frame", frame)
+chatHolder.BackgroundColor3 = CONFIG.CHAT_BG_COLOR
+chatHolder.BackgroundTransparency = 0.3
+chatHolder.Position = UDim2.new(0,10,0,40)
+chatHolder.Size = UDim2.new(1,-20,1,-110)
+roundify(chatHolder, 10)
+
+local messages = Instance.new("ScrollingFrame", chatHolder)
+messages.Position = UDim2.new(0,8,0,8)
+messages.Size = UDim2.new(1,-16,1,-16)
+messages.BackgroundTransparency = 1
+messages.ScrollBarThickness = 6
+local layout = Instance.new("UIListLayout", messages)
+layout.Padding = UDim.new(0,6)
+
+local textBox = Instance.new("TextBox", frame)
+textBox.Position = UDim2.new(0,10,1,-62)
+textBox.Size = UDim2.new(1,-120,0,32)
+textBox.BackgroundColor3 = Color3.fromRGB(35,35,35)
+textBox.Font = Enum.Font.Gotham
+textBox.TextSize = 18
+textBox.PlaceholderText = "Type..."
+textBox.TextColor3 = Color3.new(1,1,1)
+textBox.Text = ""
+roundify(textBox, 8)
+
+local sendBtn = Instance.new("TextButton", frame)
+sendBtn.Position = UDim2.new(1,-98,1,-62)
+sendBtn.Size = UDim2.new(0,88,0,32)
+sendBtn.BackgroundColor3 = CONFIG.SEND_BTN_COLOR
+sendBtn.Font = Enum.Font.GothamBlack
+sendBtn.TextSize = 19
+sendBtn.TextColor3 = Color3.fromRGB(230,230,230)
+sendBtn.Text = "Send"
+roundify(sendBtn, 8)
+
+local credit = Instance.new("TextLabel", frame)
+credit.Size = UDim2.new(1,-20,0,16)
+credit.Position = UDim2.new(0,10,1,-28)
+credit.BackgroundTransparency = 1
+credit.Font = Enum.Font.Gotham
+credit.TextSize = 13
+credit.TextColor3 = Color3.fromRGB(120,180,255)
+credit.TextXAlignment = Enum.TextXAlignment.Right
+credit.Text = "Powered by ลุงอาร์ม (Lunarplyr)"
+
+-- Fade Group
+local uiGroup = {chatHolder, messages, textBox, sendBtn, credit}
+local minimized, animing = false, false
+
+local function fadeOutGroup(d)
+	for _,inst in ipairs(uiGroup) do
+		if inst:IsA("TextLabel") or inst:IsA("TextButton") or inst:IsA("TextBox") then
+			tween(inst, d, {TextTransparency = 1})
+		end
+		if inst.BackgroundTransparency ~= nil then
+			tween(inst, d, {BackgroundTransparency = 1})
+		end
+	end
+end
+
+local function fadeInGroup(d)
+	tween(chatHolder, d, {BackgroundTransparency = 0.3})
+	tween(textBox, d, {BackgroundTransparency = 0.15})
+	tween(sendBtn, d, {BackgroundTransparency = 0.08})
+	for _,inst in ipairs(uiGroup) do
+		if inst:IsA("TextLabel") or inst:IsA("TextButton") or inst:IsA("TextBox") then
+			tween(inst, d, {TextTransparency = 0})
+		end
+	end
+end
+
+local function setGroupVisible(v)
+	for _,inst in ipairs(uiGroup) do inst.Visible = v end
+end
+
+-- Minimize
+local EXPANDED_SIZE = UDim2.new(0,360,0,260)
+local COLLAPSED_SIZE = UDim2.new(0,200,0,50)
+minBtn.MouseButton1Click:Connect(function()
+	if animing then return end
+	animing = true
+	if not minimized then
+		fadeOutGroup(CONFIG.FADE_TIME)
+		task.delay(CONFIG.FADE_TIME, function()
+			setGroupVisible(false)
+			local tw = tween(frame, CONFIG.SHRINK_TIME, {Size = COLLAPSED_SIZE})
+			tw.Completed:Connect(function()
+				minimized = true
+				minBtn.Text = "+"
+				animing = false
+			end)
+		end)
+	else
+		local tw = tween(frame, CONFIG.SHRINK_TIME, {Size = EXPANDED_SIZE})
+		tw.Completed:Connect(function()
+			setGroupVisible(true)
+			fadeInGroup(CONFIG.FADE_TIME)
+			task.delay(CONFIG.FADE_TIME, function()
+				minimized = false
+				minBtn.Text = "–"
+				animing = false
+			end)
+		end)
+	end
 end)
 
--------------------------------------------------
--- 3️⃣ โหลด SCRIPT เฉพาะตาม MAP (ถ้ามี)
--------------------------------------------------
-local url
-if mapId == 138365924124161 then
-    url = "https://raw.githubusercontent.com/wkdopajwiojf/Backrooms-Drift/refs/heads/main/Script"
-elseif mapId == 14419907512 then
-    url = "https://raw.githubusercontent.com/wkdopajwiojf/Zombie-game/refs/heads/main/Eng%20version%20%E0%B8%94%E0%B8%B1%E0%B8%94%E0%B9%81%E0%B8%9B%E0%B8%A5%E0%B8%87%20script%20%E0%B8%97%E0%B8%B5%E0%B9%88%E0%B8%99%E0%B8%B5%E0%B9%88"
-elseif mapId == 9872472334 then
-    url = "https://raw.githubusercontent.com/wkdopajwiojf/evade-bypass-countdown/refs/heads/main/Protected_8932730771877973.lua.txt"
-elseif WARP_ALLOWED[mapId] then
-    url = "https://raw.githubusercontent.com/arm17966/Tploop-/refs/heads/main/Tploop%E0%B9%80%E0%B8%82%E0%B9%89%E0%B8%B2%E0%B8%A3%E0%B8%AB%E0%B8%B1%E0%B8%AA"
+---------------------------
+-- 5. Chat Relay Core
+---------------------------
+local lastId = 0
+
+local function addMessage(author,text,isSelf)
+	local lbl = Instance.new("TextLabel", messages)
+	lbl.BackgroundTransparency = 1
+	lbl.Font = Enum.Font.Gotham
+	lbl.TextSize = 18
+	lbl.TextWrapped = true
+	lbl.AutomaticSize = Enum.AutomaticSize.XY
+	lbl.Size = UDim2.new(1,0,0,0)
+	local t = getTimeTag()
+	if isSelf then
+		lbl.Text = string.format("%s :%s %s", text, author, t)
+		lbl.TextXAlignment = Enum.TextXAlignment.Right
+		lbl.TextColor3 = CONFIG.ACCENT_COLOR
+	else
+		lbl.Text = string.format("%s %s: %s", t, author, text)
+		lbl.TextXAlignment = Enum.TextXAlignment.Left
+		lbl.TextColor3 = CONFIG.TITLE_COLOR
+	end
+	task.wait()
+	messages.CanvasSize = UDim2.new(0,0,0,layout.AbsoluteContentSize.Y + 10)
+	messages.CanvasPosition = Vector2.new(0, math.max(0, layout.AbsoluteContentSize.Y - messages.AbsoluteWindowSize.Y))
 end
 
-if url then
-    print("🌍 Detected map-specific script for PlaceId:", mapId)
-    safeLoad(url, "Map-Specific Script")
-else
-    print("ℹ️ No map-specific script found. Using defaults only.")
+local function sendToDiscord(txt)
+	local body = HttpService:JSONEncode({author = player.Name, text = txt})
+	pcall(function()
+		REQUEST({
+			Url = CONFIG.RELAY_URL .. "/to-discord",
+			Method = "POST",
+			Headers = {["Content-Type"]="application/json",["x-relay-key"]=CONFIG.RELAY_KEY},
+			Body = body
+		})
+	end)
 end
 
--------------------------------------------------
--- 🧾 Log Summary
--------------------------------------------------
-print("==========================================")
-print("📦 DXD Ultimate Loader Initialized ✅")
-print("  - Banlist Check: OK")
-print("  - WarpControl: Loaded only in allowed maps")
-print("  - Chat with Me: Loaded every map (after delay)")
-print("  - Map Loader: Active")
-print("==========================================")
+local function handleSend()
+	local txt = textBox.Text
+	if txt ~= "" then
+		addMessage(player.Name, txt, true)
+		sendToDiscord(txt)
+		textBox.Text = ""
+	end
+end
+
+sendBtn.MouseButton1Click:Connect(handleSend)
+textBox.FocusLost:Connect(function(enterPressed)
+	if enterPressed then handleSend() end
+end)
+
+-- Polling
+task.spawn(function()
+	while true do
+		local ok, res = pcall(function()
+			return REQUEST({
+				Url = CONFIG.RELAY_URL .. "/messages",
+				Method = "GET",
+				Headers = {["x-relay-key"]=CONFIG.RELAY_KEY}
+			})
+		end)
+		if ok and res and res.StatusCode == 200 then
+			local data = HttpService:JSONDecode(res.Body)
+			if data and data.ok then
+				for _,m in ipairs(data.messages) do
+					if m.id and m.id > lastId and m.author ~= player.Name then
+						addMessage(m.author,m.text,false)
+						lastId = m.id
+					end
+				end
+			end
+		end
+		task.wait(1)
+	end
+end)
+
+addMessage("System","DXD Relay ready ✅", false)
