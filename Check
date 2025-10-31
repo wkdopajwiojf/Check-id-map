@@ -95,7 +95,6 @@ local ok, res = pcall(function() return game:HttpGet(CHAT_URL) end)
     else
         warn("❌ Chat UI download failed: "..tostring(res))
     end
-end)
 
 -------------------------------------------------
 -- 1️⃣ โหลด WarpControl เฉพาะแมพที่กำหนด
