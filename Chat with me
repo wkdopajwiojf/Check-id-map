@@ -1,8 +1,9 @@
---[[ ⚙️ DXD Relay UI v5.1 (No Map Loader)
-   - ไม่มีระบบ Map Loader แล้ว
+--[[ ⚙️ DXD Relay UI v5.1 (No Map Loader / No Banlist)
+   - ไม่มีระบบ Map Loader
+   - ไม่มีระบบ Banlist แล้ว
    - Config พร้อมใช้ (ตั้งค่าสี ความเร็ว ระบบต่างๆ ได้ง่าย)
    - UI Fade Minimize ทำงานสมบูรณ์ ไม่มีค้าง
-   - Webhook + Banlist (เปิด/ปิดได้)
+   - Webhook เข้า/ออกเกม (ปิดได้)
 ]]
 
 ---------------------------
@@ -27,7 +28,6 @@ local CONFIG = {
     SHRINK_TIME = 1,
 
     -- ⚙️ Feature Toggles
-    ENABLE_BANLIST = true,
     ENABLE_WEBHOOK = true,
 }
 
@@ -66,20 +66,7 @@ if CONFIG.ENABLE_WEBHOOK then
 end
 
 ---------------------------
--- 3. Banlist
----------------------------
-if CONFIG.ENABLE_BANLIST then
-	print("Checking Banlist 🔃")
-	for i = 1, 100, math.random(5,15) do task.wait(0.05) print("Loading... " .. i .. "%") end
-	print("Loading... 100% ✅")
-
-	local isBanned = loadstring(game:HttpGet("https://raw.githubusercontent.com/wkdopajwiojf/Zombie-game/main/Ban%20land"))()
-	if isBanned then return print("Ban ❌") end
-	print("Success ✅")
-end
-
----------------------------
--- 4. DXD Chat Relay UI
+-- 3. DXD Chat Relay UI
 ---------------------------
 local function roundify(obj, r)
 	local c = Instance.new("UICorner")
@@ -245,7 +232,7 @@ minBtn.MouseButton1Click:Connect(function()
 end)
 
 ---------------------------
--- 5. Chat Relay Core
+-- 4. Chat Relay Core
 ---------------------------
 local lastId = 0
 
@@ -278,7 +265,10 @@ local function sendToDiscord(txt)
 		REQUEST({
 			Url = CONFIG.RELAY_URL .. "/to-discord",
 			Method = "POST",
-			Headers = {["Content-Type"]="application/json",["x-relay-key"]=CONFIG.RELAY_KEY},
+			Headers = {
+				["Content-Type"]="application/json",
+				["x-relay-key"]=CONFIG.RELAY_KEY
+			},
 			Body = body
 		})
 	end)
