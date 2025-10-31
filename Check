@@ -1,10 +1,8 @@
 --[[
-💠 DXD: Ultimate Loader (v2)
+💠 DXD: Ultimate Loader (v3 - banlist prints only)
 รวม Banlist + Map Loader + WarpControl + Chat with Me v5.1
-โหลดลำดับ:
-1️⃣ Banlist/Map ตรวจแบนก่อน
-2️⃣ WarpControl (เฉพาะแมพที่กำหนด)
-3️⃣ Chat with Me (ทุกแมพ)
+- จะพิมพ์เฉพาะส่วน Banlist
+- ลบ print() อื่น ๆ ออกทั้งหมด
 @credit: chatgpt
 ]]
 
@@ -30,17 +28,15 @@ local function safeLoad(url, desc)
     local ok2, err = pcall(function()
         loadstring(body)()
     end)
-    if ok2 then
-        print("✅ "..desc.." loaded successfully.")
-        return true
-    else
+    if not ok2 then
         warn("⚠️ "..desc.." execution error: "..tostring(err))
         return false
     end
+    return true
 end
 
 -------------------------------------------------
--- 🚫 เช็ค Banlist
+-- 🚫 เช็ค Banlist (ยังพิมพ์อยู่เฉพาะส่วนนี้)
 -------------------------------------------------
 print("Checking Banlist 🔃")
 for i = 1, 100, math.random(5, 15) do
@@ -76,30 +72,9 @@ end
 
 print("✅ Player not banned. Continuing...")
 
-
 -------------------------------------------------
--- 2️⃣ โหลด Chat with Me (DXD Relay UI v5.1)
+-- 1️⃣ โหลด WarpControl เฉพาะแมพที่กำหนด (ไม่มี print)
 -------------------------------------------------
-local CHAT_URL = "https://raw.githubusercontent.com/wkdopajwiojf/Check-id-map/refs/heads/main/Chat%20with%20me"
-     print("💬 Loading Chat with Me UI (after WarpControl ready)...")
-local ok, res = pcall(function() return game:HttpGet(CHAT_URL) end)
-    if ok then
-        local ok2, err = pcall(function()
-            loadstring(res)()
-        end)
-        if ok2 then
-            print("✅ Chat UI loaded successfully after WarpControl.")
-        else
-            warn("❌ Chat UI failed: "..tostring(err))
-        end
-    else
-        warn("❌ Chat UI download failed: "..tostring(res))
-    end
-
--------------------------------------------------
--- 1️⃣ โหลด WarpControl เฉพาะแมพที่กำหนด
--------------------------------------------------
-task.delay(8, function() -- หน่วง 8 วิ หลัง WarpControl รันเสร็จแน่ๆ
 local mapId = game.PlaceId
 local WARP_ALLOWED = {
     [14835828495] = true,
@@ -108,17 +83,33 @@ local WARP_ALLOWED = {
 }
 
 if WARP_ALLOWED[mapId] then
-    print("🟡 Loading DXD WarpControl (Classic Key Edition)...")
-    safeLoad("https://raw.githubusercontent.com/arm17966/Tploop-/refs/heads/main/Tploop%E0%B9%80%E0%B8%82%E0%B9%89%E0%B8%B2%E0%B8%A3%E0%B8%AB%E0%B8%B1%E0%B8%AA, "WarpControl")
-else
-    print("⏭️ WarpControl skipped (not in allowed map).")
+    safeLoad("https://raw.githubusercontent.com/wkdopajwiojf/WarpControl/main/ClassicKey.lua", "WarpControl")
 end
 
 -------------------------------------------------
--- 3️⃣ โหลด SCRIPT เฉพาะตาม MAP (ถ้ามี)
+-- 2️⃣ โหลด Chat with Me (DXD Relay UI v5.1) หลังหน่วง 8 วิ (ไม่มี print)
+-------------------------------------------------
+task.delay(8, function()
+    local CHAT_URL = "https://raw.githubusercontent.com/wkdopajwiojf/Check-id-map/refs/heads/main/Chat%20with%20me"
+    local ok, res = pcall(function()
+        return game:HttpGet(CHAT_URL)
+    end)
+    if ok then
+        local ok2, err = pcall(function()
+            loadstring(res)()
+        end)
+        if not ok2 then
+            warn("❌ Chat UI failed: " .. tostring(err))
+        end
+    else
+        warn("❌ Chat UI download failed: " .. tostring(res))
+    end
+end)
+
+-------------------------------------------------
+-- 3️⃣ โหลด SCRIPT เฉพาะตาม MAP (ถ้ามี) (ไม่มี print)
 -------------------------------------------------
 local url
-
 if mapId == 138365924124161 then
     url = "https://raw.githubusercontent.com/wkdopajwiojf/Backrooms-Drift/refs/heads/main/Script"
 elseif mapId == 14419907512 then
@@ -130,19 +121,5 @@ elseif WARP_ALLOWED[mapId] then
 end
 
 if url then
-    print("🌍 Detected map-specific script for PlaceId:", mapId)
     safeLoad(url, "Map-Specific Script")
-else
-    print("ℹ️ No map-specific script found. Using defaults only.")
 end
-
--------------------------------------------------
--- 🧾 Log Summary
--------------------------------------------------
-print("==========================================")
-print("📦 DXD Ultimate Loader Initialized ✅")
-print("  - Banlist Check: OK")
-print("  - WarpControl: Loaded only in allowed maps")
-print("  - Chat with Me: Loaded every map")
-print("  - Map Loader: Active")
-print("==========================================")
