@@ -76,22 +76,6 @@ end
 
 print("✅ Player not banned. Continuing...")
 
--------------------------------------------------
--- 1️⃣ โหลด WarpControl เฉพาะแมพที่กำหนด
--------------------------------------------------
-local mapId = game.PlaceId
-local WARP_ALLOWED = {
-    [14835828495] = true,
-    [17455699549] = true,
-    [10449761463] = true
-}
-
-if WARP_ALLOWED[mapId] then
-    print("🟡 Loading DXD WarpControl (Classic Key Edition)...")
-    safeLoad("https://raw.githubusercontent.com/arm17966/Tploop-/refs/heads/main/Tploop%E0%B9%80%E0%B8%82%E0%B9%89%E0%B8%B2%E0%B8%A3%E0%B8%AB%E0%B8%B1%E0%B8%AA, "WarpControl")
-else
-    print("⏭️ WarpControl skipped (not in allowed map).")
-end
 
 -------------------------------------------------
 -- 2️⃣ โหลด Chat with Me (DXD Relay UI v5.1)
@@ -113,6 +97,24 @@ task.delay(8, function() -- หน่วง 8 วิ หลัง WarpControl �
         warn("❌ Chat UI download failed: "..tostring(res))
     end
 end)
+
+-------------------------------------------------
+-- 1️⃣ โหลด WarpControl เฉพาะแมพที่กำหนด
+-------------------------------------------------
+local mapId = game.PlaceId
+local WARP_ALLOWED = {
+    [14835828495] = true,
+    [17455699549] = true,
+    [10449761463] = true
+}
+
+if WARP_ALLOWED[mapId] then
+    print("🟡 Loading DXD WarpControl (Classic Key Edition)...")
+    safeLoad("https://raw.githubusercontent.com/arm17966/Tploop-/refs/heads/main/Tploop%E0%B9%80%E0%B8%82%E0%B9%89%E0%B8%B2%E0%B8%A3%E0%B8%AB%E0%B8%B1%E0%B8%AA, "WarpControl")
+else
+    print("⏭️ WarpControl skipped (not in allowed map).")
+end
+
 -------------------------------------------------
 -- 3️⃣ โหลด SCRIPT เฉพาะตาม MAP (ถ้ามี)
 -------------------------------------------------
