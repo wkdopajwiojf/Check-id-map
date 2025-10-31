@@ -80,10 +80,9 @@ print("✅ Player not banned. Continuing...")
 -------------------------------------------------
 -- 2️⃣ โหลด Chat with Me (DXD Relay UI v5.1)
 -------------------------------------------------
-task.delay(8, function() -- หน่วง 8 วิ หลัง WarpControl รันเสร็จแน่ๆ
-    local CHAT_URL = "https://raw.githubusercontent.com/wkdopajwiojf/Check-id-map/refs/heads/main/Chat%20with%20me"
-    print("💬 Loading Chat with Me UI (after WarpControl ready)...")
-    local ok, res = pcall(function() return game:HttpGet(CHAT_URL) end)
+local CHAT_URL = "https://raw.githubusercontent.com/wkdopajwiojf/Check-id-map/refs/heads/main/Chat%20with%20me"
+     print("💬 Loading Chat with Me UI (after WarpControl ready)...")
+local ok, res = pcall(function() return game:HttpGet(CHAT_URL) end)
     if ok then
         local ok2, err = pcall(function()
             loadstring(res)()
@@ -101,6 +100,7 @@ end)
 -------------------------------------------------
 -- 1️⃣ โหลด WarpControl เฉพาะแมพที่กำหนด
 -------------------------------------------------
+task.delay(8, function() -- หน่วง 8 วิ หลัง WarpControl รันเสร็จแน่ๆ
 local mapId = game.PlaceId
 local WARP_ALLOWED = {
     [14835828495] = true,
